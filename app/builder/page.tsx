@@ -5,6 +5,7 @@ import ProgressBar from "@/components/wizard/ProgressBar";
 import PersonalInfo from "@/components/wizard/PersonalInfo";
 import WorkExperience from "@/components/wizard/WorkExperience";
 import ResumePreview from "@/components/preview/ResumePreview";
+import Education from "@/components/wizard/Education";
 
 const steps = [
   {
@@ -67,9 +68,7 @@ export default function BuilderPage() {
               <div className="mt-8">
                 {currentStep === 1 && <PersonalInfo />}
                 {currentStep === 2 && <WorkExperience />}
-                {currentStep === 3 && (
-                  <Placeholder text="Education form coming next." />
-                )}
+                {currentStep === 3 && <Education />}
                 {currentStep === 4 && (
                   <Placeholder text="Skills form coming next." />
                 )}
