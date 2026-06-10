@@ -6,6 +6,7 @@ import PersonalInfo from "@/components/wizard/PersonalInfo";
 import WorkExperience from "@/components/wizard/WorkExperience";
 import ResumePreview from "@/components/preview/ResumePreview";
 import Education from "@/components/wizard/Education";
+import Skills from "@/components/wizard/Skills";
 
 const steps = [
   {
@@ -69,9 +70,7 @@ export default function BuilderPage() {
                 {currentStep === 1 && <PersonalInfo />}
                 {currentStep === 2 && <WorkExperience />}
                 {currentStep === 3 && <Education />}
-                {currentStep === 4 && (
-                  <Placeholder text="Skills form coming next." />
-                )}
+                {currentStep === 4 && <Skills />}
                 {currentStep === 5 && (
                   <Placeholder text="Review screen coming next." />
                 )}

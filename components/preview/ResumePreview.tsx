@@ -22,6 +22,7 @@ export default function ResumePreview() {
   education?.school,
   education?.degree,
   education?.year,
+  resumeData.skills.length > 0 ? "skills" : "",
 ];
 
   const completedItems = completionItems.filter(Boolean).length;
@@ -141,7 +142,20 @@ export default function ResumePreview() {
                 Skills
               </h3>
 
-              <MissingSection text="Add your skills" />
+              {resumeData.skills.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {resumeData.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <MissingSection text="Add your skills" />
+              )}
             </section>
           </div>
         </div>
