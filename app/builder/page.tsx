@@ -1,6 +1,8 @@
 "use client";
 
+
 import { useState } from "react";
+import { initialResumeData, ResumeData } from "@/types/resume";
 import ProgressBar from "@/components/wizard/ProgressBar";
 import PersonalInfo from "@/components/wizard/PersonalInfo";
 
@@ -28,6 +30,7 @@ const steps = [
 ];
 
 export default function BuilderPage() {
+  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
   const [currentStep, setCurrentStep] = useState(1);
 
   const step = steps[currentStep - 1];
