@@ -9,16 +9,20 @@ export default function ResumePreview() {
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim();
 
   const experience = resumeData.experience[0];
+  const education = resumeData.education[0];
 
   const completionItems = [
-    resumeData.personal.firstName,
-    resumeData.personal.lastName,
-    resumeData.personal.email,
-    resumeData.personal.phone,
-    experience?.company,
-    experience?.position,
-    experience?.description,
-  ];
+  resumeData.personal.firstName,
+  resumeData.personal.lastName,
+  resumeData.personal.email,
+  resumeData.personal.phone,
+  experience?.company,
+  experience?.position,
+  experience?.description,
+  education?.school,
+  education?.degree,
+  education?.year,
+];
 
   const completedItems = completionItems.filter(Boolean).length;
   const completionScore = Math.round(
@@ -113,7 +117,23 @@ export default function ResumePreview() {
                 Education
               </h3>
 
-              <MissingSection text="Add your education details" />
+              {education?.school || education?.degree || education?.year ? (
+                <div className="mt-3">
+                  <p className="text-sm font-bold text-gray-900">
+                    {education.degree || "Degree / Course"}
+                  </p>
+
+                  <p className="text-xs text-gray-600">
+                    {education.school || "School / University"}
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    {education.year || "Graduation Year"}
+                  </p>
+                </div>
+              ) : (
+                <MissingSection text="Add your education details" />
+              )}
             </section>
 
             <section className="mt-6">
