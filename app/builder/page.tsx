@@ -7,6 +7,7 @@ import WorkExperience from "@/components/wizard/WorkExperience";
 import ResumePreview from "@/components/preview/ResumePreview";
 import Education from "@/components/wizard/Education";
 import Skills from "@/components/wizard/Skills";
+import Review from "@/components/wizard/Review";
 
 const steps = [
   {
@@ -71,9 +72,7 @@ export default function BuilderPage() {
                 {currentStep === 2 && <WorkExperience />}
                 {currentStep === 3 && <Education />}
                 {currentStep === 4 && <Skills />}
-                {currentStep === 5 && (
-                  <Placeholder text="Review screen coming next." />
-                )}
+                {currentStep === 5 && <Review />}
               </div>
 
               <div className="mt-10 flex justify-between">
@@ -90,7 +89,7 @@ export default function BuilderPage() {
                   disabled={currentStep === steps.length}
                   className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {currentStep === steps.length ? "Finish" : "Next →"}
+                  {currentStep === steps.length ? "Proceed to Download" : "Next →"}
                 </button>
               </div>
             </div>
