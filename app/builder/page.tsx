@@ -1,10 +1,9 @@
 "use client";
 
-
 import { useState } from "react";
-import { initialResumeData, ResumeData } from "@/types/resume";
 import ProgressBar from "@/components/wizard/ProgressBar";
 import PersonalInfo from "@/components/wizard/PersonalInfo";
+import WorkExperience from "@/components/wizard/WorkExperience";
 
 const steps = [
   {
@@ -30,7 +29,6 @@ const steps = [
 ];
 
 export default function BuilderPage() {
-  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
   const [currentStep, setCurrentStep] = useState(1);
 
   const step = steps[currentStep - 1];
@@ -66,10 +64,16 @@ export default function BuilderPage() {
 
             <div className="mt-8">
               {currentStep === 1 && <PersonalInfo />}
-              {currentStep === 2 && <Placeholder text="Work Experience form coming next." />}
-              {currentStep === 3 && <Placeholder text="Education form coming next." />}
-              {currentStep === 4 && <Placeholder text="Skills form coming next." />}
-              {currentStep === 5 && <Placeholder text="Review screen coming next." />}
+              {currentStep === 2 && <WorkExperience />}
+              {currentStep === 3 && (
+                <Placeholder text="Education form coming next." />
+              )}
+              {currentStep === 4 && (
+                <Placeholder text="Skills form coming next." />
+              )}
+              {currentStep === 5 && (
+                <Placeholder text="Review screen coming next." />
+              )}
             </div>
 
             <div className="mt-10 flex justify-between">
