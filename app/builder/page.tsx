@@ -89,7 +89,7 @@ export default function BuilderPage() {
                   disabled={currentStep === steps.length}
                   className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {currentStep === steps.length ? "Proceed to Download" : "Next →"}
+                  {currentStep === steps.length ? "Generate Resume PDF" : "Next →"}
                 </button>
               </div>
             </div>
