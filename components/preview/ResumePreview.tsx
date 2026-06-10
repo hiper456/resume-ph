@@ -64,7 +64,7 @@ export default function ResumePreview() {
         </div>
 
         <div className="max-h-[78vh] overflow-y-auto rounded-xl bg-slate-100 p-4">
-          <div className="mx-auto aspect-[210/297] w-full max-w-[520px] rounded-lg border border-gray-300 bg-white p-8 shadow-2xl">
+          <div id ="resume-preview-paper" className="mx-auto aspect-[210/297] w-full max-w-[520px] rounded-lg border border-gray-300 bg-white p-8 shadow-2xl">
             <div className="border-b border-gray-300 pb-4">
               <h1 className="text-3xl font-bold leading-tight text-gray-900">
                 {fullName || "Juan Dela Cruz"}

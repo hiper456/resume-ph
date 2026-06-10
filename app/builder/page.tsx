@@ -8,6 +8,8 @@ import ResumePreview from "@/components/preview/ResumePreview";
 import Education from "@/components/wizard/Education";
 import Skills from "@/components/wizard/Skills";
 import Review from "@/components/wizard/Review";
+import { downloadResumePdf } from "@/lib/downloadResumePdf";
+import { useResume } from "@/context/ResumeContext";
 
 const steps = [
   {
@@ -28,14 +30,15 @@ const steps = [
   },
   {
     title: "Review",
-    description: "Review your resume details before previewing.",
+    description: "Review your resume details before generating your PDF.",
   },
 ];
 
 export default function BuilderPage() {
+  const { resumeData } = useResume();
   const [currentStep, setCurrentStep] = useState(1);
-
   const step = steps[currentStep - 1];
+  const isLastStep = currentStep === steps.length;
 
   function goNext() {
     if (currentStep < steps.length) {
@@ -47,6 +50,15 @@ export default function BuilderPage() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  }
+
+  async function handlePrimaryAction() {
+    if (isLastStep) {
+      downloadResumePdf(resumeData);
+      return;
+    }
+
+    goNext();
   }
 
   return (
@@ -85,11 +97,10 @@ export default function BuilderPage() {
                 </button>
 
                 <button
-                  onClick={goNext}
-                  disabled={currentStep === steps.length}
-                  className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={handlePrimaryAction}
+                  className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800"
                 >
-                  {currentStep === steps.length ? "Generate Resume PDF" : "Next →"}
+                  {isLastStep ? "Generate Resume PDF" : "Next →"}
                 </button>
               </div>
             </div>
@@ -99,13 +110,5 @@ export default function BuilderPage() {
         </div>
       </div>
     </main>
-  );
-}
-
-function Placeholder({ text }: { text: string }) {
-  return (
-    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500">
-      {text}
-    </div>
   );
 }
