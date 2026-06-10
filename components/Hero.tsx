@@ -23,7 +23,7 @@ export default function Hero() {
 
             <div className="mt-10 flex flex-wrap gap-4">
               <a
-                href="#builder"
+                href="/builder"
                 className="rounded-xl bg-white px-8 py-4 font-bold text-blue-700 transition hover:scale-105"
               >
                 Build My Resume
