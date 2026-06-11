@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveResume } from "@/lib/resumes/saveResume";
 import { ResumeData } from "@/types/resume";
+import { createPayment } from "@/lib/payments/createPayment";
 
 export async function POST(request: Request) {
   try {
@@ -16,11 +17,21 @@ export async function POST(request: Request) {
 
     const savedResume = await saveResume(resumeData);
 
+
+
+const payment = await createPayment({
+  resumeId: savedResume.id,
+  email: savedResume.email,
+  amount: 99, // ₱99 MVP price
+});
+
+console.log("Payment created:", payment.id);
+
     return NextResponse.json({
       resumeId: savedResume.id,
       email: savedResume.email,
       status: savedResume.status,
-      checkoutUrl: "https://example.com/test-checkout",
+      checkoutUrl: `/payment/manual?paymentId=${payment.id}`,
     });
   } catch (error) {
     console.error("CREATE CHECOUT ERROR:", error);
