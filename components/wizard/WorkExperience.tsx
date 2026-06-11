@@ -1,88 +1,361 @@
 "use client";
 
+import { useState } from "react";
 import { useResume } from "@/context/ResumeContext";
+import type { WorkExperience } from "@/types/resume";
+import { sortExperienceNewestFirst } from "@/utils/sortResumeEntries";
+
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function createId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+const emptyExperience = (): WorkExperience => ({
+  id: createId(),
+  company: "",
+  position: "",
+  startMonth: "",
+  startYear: "",
+  endMonth: "",
+  endYear: "",
+  isCurrent: false,
+  description: "",
+});
+
+function normalizeExperience(item: WorkExperience): WorkExperience {
+  return {
+    id: item.id || createId(),
+    company: item.company || "",
+    position: item.position || "",
+    startMonth: item.startMonth || "",
+    startYear: item.startYear || "",
+    endMonth: item.endMonth || "",
+    endYear: item.endYear || "",
+    isCurrent: Boolean(item.isCurrent),
+    description: item.description || "",
+  };
+}
 
 export default function WorkExperience() {
   const { resumeData, setResumeData } = useResume();
 
-  const experience = resumeData.experience[0] || {
-    company: "",
-    position: "",
-    startDate: "",
-    endDate: "",
-    description: "",
-  };
+  const [draft, setDraft] = useState<WorkExperience>(emptyExperience());
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const updateField = (
-    field: keyof typeof experience,
-    value: string
-  ) => {
+  const sortedExperience = sortExperienceNewestFirst(
+    resumeData.experience.map(normalizeExperience)
+  );
+
+  function updateDraft(field: keyof WorkExperience, value: string | boolean) {
+    setDraft({
+      ...draft,
+      [field]: value,
+      ...(field === "isCurrent" && value === true
+        ? { endMonth: "", endYear: "" }
+        : {}),
+    });
+  }
+
+  function saveExperience() {
+    const cleanDraft = normalizeExperience(draft);
+
+    if (!cleanDraft.company.trim() && !cleanDraft.position.trim()) {
+      return;
+    }
+
+    const updatedExperience = editingId
+      ? resumeData.experience.map((item) =>
+          item.id === editingId ? cleanDraft : normalizeExperience(item)
+        )
+      : [...resumeData.experience.map(normalizeExperience), cleanDraft];
+
     setResumeData({
       ...resumeData,
-      experience: [
-        {
-          ...experience,
-          [field]: value,
-        },
-      ],
+      experience: updatedExperience,
     });
-  };
+
+    setDraft(emptyExperience());
+    setEditingId(null);
+  }
+
+  function editExperience(item: WorkExperience) {
+    const normalized = normalizeExperience(item);
+
+    setDraft(normalized);
+    setEditingId(normalized.id);
+  }
+
+  function deleteExperience(id: string) {
+    setResumeData({
+      ...resumeData,
+      experience: resumeData.experience
+        .map(normalizeExperience)
+        .filter((item) => item.id !== id),
+    });
+
+    if (editingId === id) {
+      setDraft(emptyExperience());
+      setEditingId(null);
+    }
+  }
+
+  function cancelEdit() {
+    setDraft(emptyExperience());
+    setEditingId(null);
+  }
+
+  function formatDateRange(item: WorkExperience) {
+    const start =
+      item.startMonth || item.startYear
+        ? `${item.startMonth} ${item.startYear}`.trim()
+        : "Start date";
+
+    const end = item.isCurrent
+      ? "Present"
+      : item.endMonth || item.endYear
+      ? `${item.endMonth} ${item.endYear}`.trim()
+      : "End date";
+
+    return `${start} - ${end}`;
+  }
 
   return (
-    <div className="mt-8 grid gap-6 md:grid-cols-2">
-      <div>
-        <label className="mb-2 block font-medium">Company Name *</label>
-        <input
-          type="text"
-          value={experience.company}
-          onChange={(e) => updateField("company", e.target.value)}
-          className="w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
-          placeholder="ABC Corporation"
-        />
-      </div>
+    <div className="mt-8 space-y-6">
+      {sortedExperience.length > 0 && (
+        <div className="space-y-3">
+          {sortedExperience.map((item, index) => (
+            <div
+              key={item.id || `${item.company}-${item.position}-${index}`}
+              className={`rounded-xl border p-4 ${
+                editingId === item.id
+                  ? "border-blue-300 bg-blue-50"
+                  : "bg-gray-50"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-bold">
+                    {item.position || "Job Title"}
+                  </p>
 
-      <div>
-        <label className="mb-2 block font-medium">Job Title *</label>
-        <input
-          type="text"
-          value={experience.position}
-          onChange={(e) => updateField("position", e.target.value)}
-          className="w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
-          placeholder="Customer Service Representative"
-        />
-      </div>
+                  <p className="text-sm text-gray-600">
+                    {item.company || "Company Name"}
+                  </p>
 
-      <div>
-        <label className="mb-2 block font-medium">Start Date</label>
-        <input
-          type="text"
-          value={experience.startDate}
-          onChange={(e) => updateField("startDate", e.target.value)}
-          className="w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
-          placeholder="January 2022"
-        />
-      </div>
+                  <p className="text-sm text-gray-500">
+                    {formatDateRange(item)}
+                  </p>
+                </div>
 
-      <div>
-        <label className="mb-2 block font-medium">End Date</label>
-        <input
-          type="text"
-          value={experience.endDate}
-          onChange={(e) => updateField("endDate", e.target.value)}
-          className="w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
-          placeholder="Present"
-        />
-      </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-500">
+                  #{index + 1}
+                </span>
+              </div>
 
-      <div className="md:col-span-2">
-        <label className="mb-2 block font-medium">Responsibilities / Achievements</label>
-        <textarea
-          value={experience.description}
-          onChange={(e) => updateField("description", e.target.value)}
-          className="min-h-32 w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
-          placeholder="Describe your role, achievements, responsibilities, and measurable results."
-        />
+              {item.description && (
+                <p className="mt-3 line-clamp-2 text-sm text-gray-600">
+                  {item.description}
+                </p>
+              )}
+
+              <div className="mt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => editExperience(item)}
+                  className="text-sm font-semibold text-blue-700"
+                >
+                  Edit
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deleteExperience(item.id)}
+                  className="text-sm font-semibold text-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="rounded-xl border bg-white p-5">
+        <h3 className="text-lg font-bold">
+          {editingId ? "Edit Work Experience" : "Add Work Experience"}
+        </h3>
+
+        <div className="mt-5 grid gap-6 md:grid-cols-2">
+          <Input
+            label="Company Name *"
+            value={draft.company}
+            placeholder="ABC Corporation"
+            onChange={(value) => updateDraft("company", value)}
+          />
+
+          <Input
+            label="Job Title *"
+            value={draft.position}
+            placeholder="Senior Engineer"
+            onChange={(value) => updateDraft("position", value)}
+          />
+
+          <Select
+            label="Start Month"
+            value={draft.startMonth}
+            options={months}
+            onChange={(value) => updateDraft("startMonth", value)}
+          />
+
+          <Input
+            label="Start Year"
+            value={draft.startYear}
+            placeholder="2022"
+            onChange={(value) => updateDraft("startYear", value)}
+          />
+
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-2 font-medium">
+              <input
+                type="checkbox"
+                checked={draft.isCurrent}
+                onChange={(e) =>
+                  updateDraft("isCurrent", e.target.checked)
+                }
+              />
+              I currently work here
+            </label>
+          </div>
+
+          {!draft.isCurrent && (
+            <>
+              <Select
+                label="End Month"
+                value={draft.endMonth}
+                options={months}
+                onChange={(value) => updateDraft("endMonth", value)}
+              />
+
+              <Input
+                label="End Year"
+                value={draft.endYear}
+                placeholder="2024"
+                onChange={(value) => updateDraft("endYear", value)}
+              />
+            </>
+          )}
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block font-medium">
+              Responsibilities / Achievements
+            </label>
+
+            <textarea
+              value={draft.description}
+              onChange={(e) =>
+                updateDraft("description", e.target.value)
+              }
+              className="min-h-32 w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
+              placeholder="Describe your role, achievements, responsibilities, and measurable results."
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={saveExperience}
+            className="rounded-lg bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800"
+          >
+            {editingId ? "Update Experience" : "+ Add Work Experience"}
+          </button>
+
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="rounded-lg border px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block font-medium">{label}</label>
+
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
+      />
+    </div>
+  );
+}
+
+function Select({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block font-medium">{label}</label>
+
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
+      >
+        <option value="">Select</option>
+
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

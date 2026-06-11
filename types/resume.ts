@@ -7,17 +7,23 @@ export type PersonalInfo = {
 };
 
 export type WorkExperience = {
+  id: string;
   company: string;
   position: string;
-  startDate: string;
-  endDate: string;
+  startMonth: string;
+  startYear: string;
+  endMonth: string;
+  endYear: string;
+  isCurrent: boolean;
   description: string;
 };
 
 export type Education = {
+  id: string;
   school: string;
   degree: string;
-  year: string;
+  startYear: string;
+  endYear: string;
 };
 
 export type ResumeData = {
