@@ -27,6 +27,13 @@ export type Education = {
 };
 
 export type ResumeData = {
+  id: string;
+
+  createdAt: string;
+  updatedAt: string;
+
+  status: "draft" | "paid";
+
   personal: PersonalInfo;
   summary: string;
   experience: WorkExperience[];
@@ -35,6 +42,13 @@ export type ResumeData = {
 };
 
 export const initialResumeData: ResumeData = {
+  id: "",
+
+  createdAt: "",
+  updatedAt: "",
+
+  status: "draft",
+
   personal: {
     firstName: "",
     lastName: "",
@@ -42,8 +56,12 @@ export const initialResumeData: ResumeData = {
     phone: "",
     address: "",
   },
+
   summary: "",
+
   experience: [],
+
   education: [],
+
   skills: [],
 };

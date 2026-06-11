@@ -18,24 +18,89 @@ type ResumeContextType = {
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
+function generateResumeId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `resume-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+}
+
+function createFreshResumeData(): ResumeData {
+  const now = new Date().toISOString();
+
+  return {
+    ...initialResumeData,
+    id: generateResumeId(),
+    createdAt: now,
+    updatedAt: now,
+    status: "draft",
+  };
+}
+
+function normalizeResumeData(data: Partial<ResumeData>): ResumeData {
+  const now = new Date().toISOString();
+
+  return {
+    ...initialResumeData,
+    ...data,
+
+    id: data.id || generateResumeId(),
+
+    createdAt: data.createdAt || now,
+    updatedAt: data.updatedAt || now,
+
+    status: data.status || "draft",
+
+    personal: {
+      ...initialResumeData.personal,
+      ...data.personal,
+    },
+
+    experience: data.experience || [],
+    education: data.education || [],
+    skills: data.skills || [],
+  };
+}
+
 export function ResumeProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [resumeData, setResumeData] =
-    useState<ResumeData>(initialResumeData);
+  const [resumeData, rawSetResumeData] =
+    useState<ResumeData>(createFreshResumeData);
 
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const setResumeData: React.Dispatch<React.SetStateAction<ResumeData>> = (
+    updater
+  ) => {
+    rawSetResumeData((previousData) => {
+      const nextData =
+        typeof updater === "function"
+          ? updater(previousData)
+          : updater;
+
+      return {
+        ...nextData,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  };
 
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
 
     if (savedData) {
       try {
-        setResumeData(JSON.parse(savedData));
+        const parsedData = JSON.parse(savedData) as Partial<ResumeData>;
+        rawSetResumeData(normalizeResumeData(parsedData));
       } catch {
         localStorage.removeItem(STORAGE_KEY);
+        rawSetResumeData(createFreshResumeData());
       }
     }
 
@@ -50,7 +115,7 @@ export function ResumeProvider({
 
   function clearResumeData() {
     localStorage.removeItem(STORAGE_KEY);
-    setResumeData(initialResumeData);
+    rawSetResumeData(createFreshResumeData());
   }
 
   return (
