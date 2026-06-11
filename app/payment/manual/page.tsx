@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const AMOUNT = 99;
@@ -11,6 +11,7 @@ const PAYMENT_DETAILS = {
 };
 
 export default function ManualPaymentPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("paymentId");
 
@@ -24,14 +25,14 @@ export default function ManualPaymentPage() {
     e.preventDefault();
 
     if (!paymentId) {
-      setMessage("Missing payment ID. Please return to the builder and try again.");
       setIsSuccess(false);
+      setMessage("Missing payment ID. Please return to the builder and try again.");
       return;
     }
 
     if (!referenceNumber.trim()) {
-      setMessage("Please enter your payment reference number.");
       setIsSuccess(false);
+      setMessage("Please enter your payment reference number.");
       return;
     }
 
@@ -58,10 +59,12 @@ export default function ManualPaymentPage() {
       }
 
       setIsSuccess(true);
-      setMessage(
-        "Payment reference submitted. We’ll verify your payment and unlock your PDF shortly."
-      );
+      setMessage("Payment reference submitted. Redirecting to your download page...");
       setReferenceNumber("");
+
+      setTimeout(() => {
+        router.replace(`/payment/download/${paymentId}`);
+      }, 1200);
     } catch (error) {
       setIsSuccess(false);
       setMessage(
@@ -180,8 +183,14 @@ export default function ManualPaymentPage() {
               </div>
 
               <div className="mt-5 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                <InfoRow label="Account Name" value={PAYMENT_DETAILS.accountName} />
-                <InfoRow label="Mobile Number" value={PAYMENT_DETAILS.mobileNumber} />
+                <InfoRow
+                  label="Account Name"
+                  value={PAYMENT_DETAILS.accountName}
+                />
+                <InfoRow
+                  label="Mobile Number"
+                  value={PAYMENT_DETAILS.mobileNumber}
+                />
                 <InfoRow label="Amount" value={`₱${AMOUNT}`} />
               </div>
 
@@ -250,7 +259,9 @@ export default function ManualPaymentPage() {
                 disabled={isSubmitting}
                 className="group h-13 w-full rounded-2xl bg-blue-700 px-5 py-3 text-base font-black text-white shadow-xl shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800 active:translate-y-0 disabled:cursor-not-allowed disabled:bg-blue-300 disabled:shadow-none"
               >
-                {isSubmitting ? "Submitting..." : "I’ve Paid — Submit Reference"}
+                {isSubmitting
+                  ? "Submitting..."
+                  : "I’ve Paid — Submit Reference"}
                 {!isSubmitting && (
                   <span className="ml-1 inline-block transition group-hover:translate-x-1">
                     →
@@ -301,17 +312,13 @@ function CheckoutStep({
   return (
     <div
       className={`rounded-2xl p-4 ring-1 ${
-        active
-          ? "bg-white/10 ring-white/15"
-          : "bg-white/5 ring-white/10"
+        active ? "bg-white/10 ring-white/15" : "bg-white/5 ring-white/10"
       }`}
     >
       <div className="flex gap-3">
         <span
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black ${
-            active
-              ? "bg-white text-blue-800"
-              : "bg-white/15 text-blue-100"
+            active ? "bg-white text-blue-800" : "bg-white/15 text-blue-100"
           }`}
         >
           {number}
