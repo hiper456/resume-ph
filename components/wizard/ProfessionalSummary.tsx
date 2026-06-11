@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useResume } from "@/context/ResumeContext";
 
 export default function ProfessionalSummary() {
   const { resumeData, setResumeData } = useResume();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const maxLength = 600;
   const recommendedMin = 150;
@@ -16,6 +20,41 @@ export default function ProfessionalSummary() {
       ...resumeData,
       summary: value,
     });
+  }
+
+  async function generateSummary() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch("/api/generate-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `${resumeData.personal.firstName} ${resumeData.personal.lastName}`,
+          experience: resumeData.experience,
+          education: resumeData.education,
+          skills: resumeData.skills,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate summary.");
+      }
+
+      const data = await response.json();
+
+      setResumeData({
+        ...resumeData,
+        summary: data.summary,
+      });
+    } catch {
+      setError("AI summary generation failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -51,10 +90,32 @@ export default function ProfessionalSummary() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-        💡 <strong>Tip:</strong> Write 2–4 sentences highlighting your
-        experience, strengths, industry expertise, and the value you bring to
-        employers.
+      <button
+        type="button"
+        onClick={generateSummary}
+        disabled={loading}
+        className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loading ? "Generating..." : "✨ Generate with AI"}
+      </button>
+
+      {error && (
+        <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-4 rounded-xl border-l-4 border-blue-600 bg-blue-50 p-4">
+        <h3 className="font-semibold text-blue-900">
+          What makes a good summary?
+        </h3>
+
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-blue-800">
+          <li>Keep it between 2 and 4 sentences.</li>
+          <li>Highlight your years of experience.</li>
+          <li>Mention your industry expertise.</li>
+          <li>Describe the value you bring to employers.</li>
+        </ul>
       </div>
 
       <div className="rounded-xl border bg-gray-50 p-4 text-sm text-gray-700">
