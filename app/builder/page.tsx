@@ -10,12 +10,18 @@ import Skills from "@/components/wizard/Skills";
 import Review from "@/components/wizard/Review";
 import PrintResume from "@/components/resume/PrintResume";
 import { downloadResumePdf } from "@/lib/downloadResumePdf";
+import ProfessionalSummary from "@/components/wizard/ProfessionalSummary";
 
 const steps = [
   {
     title: "Personal Information",
     description: "Tell us about yourself.",
   },
+  {
+    title: "Professional Summary",
+    description: "Write a brief summary of your professional background and goals.",
+  },
+
   {
     title: "Work Experience",
     description: "Add your previous jobs and responsibilities.",
@@ -81,10 +87,11 @@ export default function BuilderPage() {
 
               <div className="mt-8">
                 {currentStep === 1 && <PersonalInfo />}
-                {currentStep === 2 && <WorkExperience />}
-                {currentStep === 3 && <Education />}
-                {currentStep === 4 && <Skills />}
-                {currentStep === 5 && <Review />}
+                {currentStep === 2 && <ProfessionalSummary />}
+                {currentStep === 3 && <WorkExperience />}
+                {currentStep === 4 && <Education />}
+                {currentStep === 5 && <Skills />}
+                {currentStep === 6 && <Review />}
               </div>
 
               <div className="mt-10 flex justify-between">
