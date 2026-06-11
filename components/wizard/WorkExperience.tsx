@@ -59,6 +59,8 @@ export default function WorkExperience() {
 
   const [draft, setDraft] = useState<WorkExperience>(emptyExperience());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   const sortedExperience = sortExperienceNewestFirst(
     resumeData.experience.map(normalizeExperience)
@@ -72,6 +74,53 @@ export default function WorkExperience() {
         ? { endMonth: "", endYear: "" }
         : {}),
     });
+
+    if (field === "description") {
+      setAiError("");
+    }
+  }
+
+  async function rewriteExperienceWithAI() {
+    if (!draft.description.trim()) {
+      setAiError("Add a rough description first, then let AI improve it.");
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      setAiError("");
+
+      const response = await fetch("/api/improve-experience", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          position: draft.position,
+          company: draft.company,
+          description: draft.description,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to improve experience.");
+      }
+
+      const data = await response.json();
+
+      if (!data.description) {
+        throw new Error("No improved description returned.");
+      }
+
+      setDraft({
+        ...draft,
+        description: data.description,
+      });
+    } catch {
+      setAiError("AI rewrite failed. Please try again.");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   function saveExperience() {
@@ -94,6 +143,7 @@ export default function WorkExperience() {
 
     setDraft(emptyExperience());
     setEditingId(null);
+    setAiError("");
   }
 
   function editExperience(item: WorkExperience) {
@@ -101,6 +151,7 @@ export default function WorkExperience() {
 
     setDraft(normalized);
     setEditingId(normalized.id);
+    setAiError("");
   }
 
   function deleteExperience(id: string) {
@@ -114,12 +165,14 @@ export default function WorkExperience() {
     if (editingId === id) {
       setDraft(emptyExperience());
       setEditingId(null);
+      setAiError("");
     }
   }
 
   function cancelEdit() {
     setDraft(emptyExperience());
     setEditingId(null);
+    setAiError("");
   }
 
   function formatDateRange(item: WorkExperience) {
@@ -171,7 +224,7 @@ export default function WorkExperience() {
               </div>
 
               {item.description && (
-                <p className="mt-3 line-clamp-2 text-sm text-gray-600">
+                <p className="mt-3 whitespace-pre-line line-clamp-3 text-sm text-gray-600">
                   {item.description}
                 </p>
               )}
@@ -264,18 +317,45 @@ export default function WorkExperience() {
           )}
 
           <div className="md:col-span-2">
-            <label className="mb-2 block font-medium">
-              Responsibilities / Achievements
-            </label>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+              <label className="block font-medium">
+                Responsibilities / Achievements
+              </label>
+
+              <button
+                type="button"
+                onClick={rewriteExperienceWithAI}
+                disabled={aiLoading}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {aiLoading ? "Rewriting..." : "✨ Rewrite with AI"}
+              </button>
+            </div>
 
             <textarea
               value={draft.description}
               onChange={(e) =>
                 updateDraft("description", e.target.value)
               }
-              className="min-h-32 w-full rounded-lg border p-3 focus:border-blue-500 focus:outline-none"
-              placeholder="Describe your role, achievements, responsibilities, and measurable results."
+              className="min-h-40 w-full rounded-lg border p-3 leading-7 focus:border-blue-500 focus:outline-none"
+              placeholder="Example: Maintained engine room machinery, monitored equipment condition, assisted with inspections, and supported safe vessel operations."
             />
+
+            {aiError && (
+              <p className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                {aiError}
+              </p>
+            )}
+
+            <div className="mt-3 rounded-xl bg-indigo-50 p-4 text-sm text-indigo-800">
+              <p className="font-semibold">AI writing assistant</p>
+
+              <p className="mt-1 leading-6">
+                Write rough notes such as “maintained engines” or “handled
+                daily inspections,” then let AI turn them into professional
+                resume bullet points.
+              </p>
+            </div>
           </div>
         </div>
 
