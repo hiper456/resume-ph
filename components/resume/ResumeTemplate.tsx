@@ -46,7 +46,7 @@ export default function ResumeTemplate() {
   return (
     <div
       id="resume-preview-paper"
-      className="mx-auto w-full max-w-[540px] rounded-lg border border-gray-200 bg-white p-10 text-gray-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]"
+      className="mx-auto w-full max-w-[540px] rounded-lg border border-gray-200 bg-white p-10 text-gray-900 shadow-2xl print:m-0 print:w-full print:max-w-none print:rounded-none print:border-0 print:px-10 print:py-8 print:shadow-none"
     >
       <header className="text-center">
         <h1 className="text-3xl font-extrabold uppercase tracking-tight text-gray-950">

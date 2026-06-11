@@ -4,7 +4,7 @@ import ResumeTemplate from "@/components/resume/ResumeTemplate";
 
 export default function ResumePreview() {
   return (
-    <aside className="sticky top-8 self-start">
+    <aside className="sticky top-8 self-start print:hidden">
       <div className="rounded-2xl bg-white p-6 shadow-lg">
         <ResumeTemplate />
       </div>

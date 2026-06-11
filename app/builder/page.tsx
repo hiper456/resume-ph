@@ -8,6 +8,7 @@ import ResumePreview from "@/components/preview/ResumePreview";
 import Education from "@/components/wizard/Education";
 import Skills from "@/components/wizard/Skills";
 import Review from "@/components/wizard/Review";
+import PrintResume from "@/components/resume/PrintResume";
 import { downloadResumePdf } from "@/lib/downloadResumePdf";
 
 const steps = [
@@ -61,8 +62,8 @@ export default function BuilderPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-6 py-12">
+    <main className="min-h-screen bg-slate-50 print:min-h-0 print:bg-white">
+      <div className="mx-auto max-w-7xl px-6 py-12 print:hidden">
         <h1 className="text-4xl font-bold">Build Your Resume</h1>
 
         <p className="mt-2 text-gray-600">
@@ -108,6 +109,8 @@ export default function BuilderPage() {
           <ResumePreview />
         </div>
       </div>
+
+      <PrintResume />
     </main>
   );
 }
