@@ -9,7 +9,6 @@ import Education from "@/components/wizard/Education";
 import Skills from "@/components/wizard/Skills";
 import Review from "@/components/wizard/Review";
 import PrintResume from "@/components/resume/PrintResume";
-import { downloadResumePdf } from "@/lib/downloadResumePdf";
 import ProfessionalSummary from "@/components/wizard/ProfessionalSummary";
 
 const steps = [
@@ -19,9 +18,9 @@ const steps = [
   },
   {
     title: "Professional Summary",
-    description: "Write a brief summary of your professional background and goals.",
+    description:
+      "Write a brief summary of your professional background and goals.",
   },
-
   {
     title: "Work Experience",
     description: "Add your previous jobs and responsibilities.",
@@ -36,7 +35,7 @@ const steps = [
   },
   {
     title: "Review",
-    description: "Review your resume details before generating your PDF.",
+    description: "Review your resume details before unlocking your PDF.",
   },
 ];
 
@@ -56,15 +55,6 @@ export default function BuilderPage() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
-  }
-
-  async function handlePrimaryAction() {
-    if (isLastStep) {
-      await downloadResumePdf();
-      return;
-    }
-
-    goNext();
   }
 
   return (
@@ -96,6 +86,7 @@ export default function BuilderPage() {
 
               <div className="mt-10 flex justify-between">
                 <button
+                  type="button"
                   onClick={goBack}
                   disabled={currentStep === 1}
                   className="rounded-lg border px-8 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
@@ -103,12 +94,15 @@ export default function BuilderPage() {
                   ← Back
                 </button>
 
-                <button
-                  onClick={handlePrimaryAction}
-                  className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800"
-                >
-                  {isLastStep ? "Generate Resume PDF" : "Next →"}
-                </button>
+                {!isLastStep && (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800"
+                  >
+                    Next →
+                  </button>
+                )}
               </div>
             </div>
           </div>
