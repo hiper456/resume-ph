@@ -1,5 +1,5 @@
 "use client";
-
+import ProfessionalSummary from "@/components/wizard/ProfessionalSummary";
 import { useResume } from "@/context/ResumeContext";
 
 export default function Review() {
@@ -19,6 +19,8 @@ export default function Review() {
           Review your details before generating your downloadable resume.
         </p>
       </div>
+
+      <ProfessionalSummary />
 
       <ReviewCard title="Personal Information">
         <p>{fullName || "No name added"}</p>
@@ -55,6 +57,8 @@ export default function Review() {
           <p>No skills added</p>
         )}
       </ReviewCard>
+
+      
 
       <div className="rounded-xl border border-green-200 bg-green-50 p-5 text-green-800">
         <h3 className="font-bold">Next step</h3>

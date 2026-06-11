@@ -28,6 +28,7 @@ export type Education = {
 
 export type ResumeData = {
   personal: PersonalInfo;
+  summary: string;
   experience: WorkExperience[];
   education: Education[];
   skills: string[];
@@ -41,6 +42,7 @@ export const initialResumeData: ResumeData = {
     phone: "",
     address: "",
   },
+  summary: "",
   experience: [],
   education: [],
   skills: [],

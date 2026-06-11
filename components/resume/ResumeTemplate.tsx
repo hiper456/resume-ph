@@ -62,6 +62,16 @@ export default function ResumeTemplate() {
 
       <Divider />
 
+      <ResumeSection title="Professional Summary">
+        {resumeData.summary ? (
+          <p className="text-xs leading-5 text-gray-700">
+            {resumeData.summary}
+          </p>
+        ) : (
+          <EmptyText>Your professional summary will appear here.</EmptyText>
+        )}
+      </ResumeSection>
+
       <ResumeSection title="Professional Experience">
         {experiences.length > 0 ? (
           <div className="space-y-5">
