@@ -1,5 +1,6 @@
 import { getPendingPayments } from "@/lib/payments/getPendingPayments";
 import PaymentActions from "@/components/admin/PaymentActions";
+import AdminLogoutButton from "@/components/admin/AdminLogoutButton";
 
 export default async function AdminPaymentsPage() {
   const payments = await getPendingPayments();
@@ -8,9 +9,14 @@ export default async function AdminPaymentsPage() {
     <main className="min-h-screen bg-slate-50 p-10">
       <div className="mx-auto max-w-7xl">
 
-        <h1 className="text-4xl font-bold">
-          Pending Payments
-        </h1>
+  
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold">Pending Payments</h1>
+          </div>
+
+          <AdminLogoutButton />
+        </div>
 
         <p className="mt-2 text-gray-500">
           Review manual payment submissions.

@@ -18,7 +18,7 @@ export async function saveResume(resumeData: ResumeData) {
       {
         id: resumeData.id,
         email,
-        status: resumeData.status,
+        status: resumeData.status || "draft",
         data: resumeData,
         updated_at: new Date().toISOString(),
       },

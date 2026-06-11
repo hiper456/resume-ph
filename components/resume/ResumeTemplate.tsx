@@ -1,13 +1,19 @@
 "use client";
 
-import { useResume } from "@/context/ResumeContext";
 import {
   sortEducationNewestFirst,
   sortExperienceNewestFirst,
 } from "@/utils/sortResumeEntries";
 
-export default function ResumeTemplate() {
-  const { resumeData } = useResume();
+import { ResumeData } from "@/types/resume";
+
+type ResumeTemplateProps = {
+  resumeData: ResumeData;
+};
+
+export default function ResumeTemplate({
+  resumeData,
+}: ResumeTemplateProps) {
 
   const fullName =
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim();
