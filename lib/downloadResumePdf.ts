@@ -1,5 +1,9 @@
 import jsPDF from "jspdf";
 import { ResumeData } from "@/types/resume";
+import {
+  sortEducationNewestFirst,
+  sortExperienceNewestFirst,
+} from "@/utils/sortResumeEntries";
 
 export function downloadResumePdf(resumeData: ResumeData) {
   const pdf = new jsPDF("p", "mm", "a4");
@@ -8,83 +12,169 @@ export function downloadResumePdf(resumeData: ResumeData) {
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim() ||
     "Juan Dela Cruz";
 
-  const experience = resumeData.experience[0];
-  const education = resumeData.education[0];
+  const experiences = sortExperienceNewestFirst(resumeData.experience);
+  const educationList = sortEducationNewestFirst(resumeData.education);
 
   let y = 20;
 
+  const pageWidth = 210;
+  const marginX = 20;
+  const contentWidth = pageWidth - marginX * 2;
+
+  function checkPageSpace(requiredSpace: number) {
+    if (y + requiredSpace > 280) {
+      pdf.addPage();
+      y = 20;
+    }
+  }
+
+  function sectionTitle(title: string) {
+    checkPageSpace(12);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.text(title, marginX, y);
+
+    y += 2;
+
+    pdf.setDrawColor(180);
+    pdf.line(marginX, y, pageWidth - marginX, y);
+
+    y += 7;
+  }
+
+  function normalText(text: string, fontSize = 10) {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(fontSize);
+    pdf.text(text, marginX, y);
+    y += 5;
+  }
+
+  function boldText(text: string, fontSize = 11) {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(fontSize);
+    pdf.text(text, marginX, y);
+    y += 5;
+  }
+
+  function formatExperienceDate(item: (typeof experiences)[number]) {
+    const start = `${item.startMonth || ""} ${item.startYear || ""}`.trim();
+
+    const end = item.isCurrent
+      ? "Present"
+      : `${item.endMonth || ""} ${item.endYear || ""}`.trim();
+
+    if (!start && !end) return "";
+    if (!start) return end;
+    if (!end) return start;
+
+    return `${start} - ${end}`;
+  }
+
+  function formatEducationDate(item: (typeof educationList)[number]) {
+    if (item.startYear && item.endYear) {
+      return `${item.startYear} - ${item.endYear}`;
+    }
+
+    if (item.endYear) return item.endYear;
+    if (item.startYear) return `${item.startYear} - Present`;
+
+    return "";
+  }
+
+  // Header
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(22);
-  pdf.text(fullName, 20, y);
+  pdf.text(fullName, marginX, y);
 
   y += 8;
 
+  const contactLine = [
+    resumeData.personal.email,
+    resumeData.personal.phone,
+    resumeData.personal.address,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10);
-  pdf.text(
-    `${resumeData.personal.email || "email@example.com"} | ${
-      resumeData.personal.phone || "+63 912 345 6789"
-    } | ${resumeData.personal.address || "Philippines"}`,
-    20,
-    y
-  );
+  pdf.text(contactLine || "email@example.com | +63 912 345 6789 | Philippines", marginX, y);
 
-  y += 12;
+  y += 14;
 
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(12);
-  pdf.text("WORK EXPERIENCE", 20, y);
-  y += 6;
+  // Work Experience
+  sectionTitle("WORK EXPERIENCE");
 
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(11);
-  pdf.text(experience?.position || "Job Title", 20, y);
-  y += 5;
+  if (experiences.length > 0) {
+    experiences.forEach((experience) => {
+      checkPageSpace(30);
 
-  pdf.setFont("helvetica", "normal");
-  pdf.text(experience?.company || "Company Name", 20, y);
-  y += 5;
+      boldText(experience.position || "Job Title", 11);
+      normalText(experience.company || "Company Name", 10);
 
-  pdf.text(
-    `${experience?.startDate || "Start"} - ${experience?.endDate || "Present"}`,
-    20,
-    y
-  );
-  y += 7;
+      const dateLine = formatExperienceDate(experience);
+      if (dateLine) {
+        normalText(dateLine, 9);
+      }
 
-  const expLines = pdf.splitTextToSize(
-    experience?.description ||
-      "Describe your responsibilities, achievements, and measurable results.",
-    170
-  );
+      if (experience.description) {
+        const lines = pdf.splitTextToSize(
+          experience.description,
+          contentWidth
+        );
 
-  pdf.text(expLines, 20, y);
-  y += expLines.length * 5 + 8;
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        pdf.text(lines, marginX, y);
 
-  pdf.setFont("helvetica", "bold");
-  pdf.text("EDUCATION", 20, y);
-  y += 6;
+        y += lines.length * 5 + 4;
+      } else {
+        y += 3;
+      }
+    });
+  } else {
+    normalText("No work experience added.");
+    y += 4;
+  }
 
-  pdf.setFont("helvetica", "normal");
-  pdf.text(education?.degree || "Degree / Course", 20, y);
-  y += 5;
-  pdf.text(education?.school || "School / University", 20, y);
-  y += 5;
-  pdf.text(education?.year || "Year", 20, y);
-  y += 10;
+  // Education
+  sectionTitle("EDUCATION");
 
-  pdf.setFont("helvetica", "bold");
-  pdf.text("SKILLS", 20, y);
-  y += 6;
+  if (educationList.length > 0) {
+    educationList.forEach((education) => {
+      checkPageSpace(20);
 
-  pdf.setFont("helvetica", "normal");
-  pdf.text(
-    resumeData.skills.length > 0
-      ? resumeData.skills.join(", ")
-      : "Skills not added",
-    20,
-    y
-  );
+      boldText(education.degree || "Degree / Course", 11);
+      normalText(education.school || "School / University", 10);
+
+      const dateLine = formatEducationDate(education);
+      if (dateLine) {
+        normalText(dateLine, 9);
+      }
+
+      y += 3;
+    });
+  } else {
+    normalText("No education added.");
+    y += 4;
+  }
+
+  // Skills
+  sectionTitle("SKILLS");
+
+  if (resumeData.skills.length > 0) {
+    const skillLines = pdf.splitTextToSize(
+      resumeData.skills.join(", "),
+      contentWidth
+    );
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(10);
+    pdf.text(skillLines, marginX, y);
+  } else {
+    normalText("No skills added.");
+  }
 
   pdf.save("resume-ph-resume.pdf");
 }
