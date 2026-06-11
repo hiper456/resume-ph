@@ -9,7 +9,6 @@ import Education from "@/components/wizard/Education";
 import Skills from "@/components/wizard/Skills";
 import Review from "@/components/wizard/Review";
 import { downloadResumePdf } from "@/lib/downloadResumePdf";
-import { useResume } from "@/context/ResumeContext";
 
 const steps = [
   {
@@ -35,8 +34,8 @@ const steps = [
 ];
 
 export default function BuilderPage() {
-  const { resumeData } = useResume();
   const [currentStep, setCurrentStep] = useState(1);
+
   const step = steps[currentStep - 1];
   const isLastStep = currentStep === steps.length;
 
@@ -54,7 +53,7 @@ export default function BuilderPage() {
 
   async function handlePrimaryAction() {
     if (isLastStep) {
-      downloadResumePdf(resumeData);
+      await downloadResumePdf();
       return;
     }
 

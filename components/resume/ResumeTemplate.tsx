@@ -36,10 +36,7 @@ export default function ResumeTemplate() {
   }
 
   function formatEducationDate(item: (typeof education)[number]) {
-    if (item.startYear && item.endYear) {
-      return `${item.startYear} - ${item.endYear}`;
-    }
-
+    if (item.startYear && item.endYear) return `${item.startYear} - ${item.endYear}`;
     if (item.endYear) return item.endYear;
     if (item.startYear) return `${item.startYear} - Present`;
 
@@ -49,126 +46,139 @@ export default function ResumeTemplate() {
   return (
     <div
       id="resume-preview-paper"
-      className="mx-auto w-full max-w-[520px] rounded-lg border bg-white p-8 text-gray-900 shadow-2xl"
+      className="mx-auto w-full max-w-[540px] rounded-lg border border-gray-200 bg-white p-10 text-gray-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)]"
     >
-      <header className="border-b pb-4">
-        <h1 className="text-3xl font-bold">
+      <header className="text-center">
+        <h1 className="text-3xl font-extrabold uppercase tracking-tight text-gray-950">
           {fullName || "Juan Dela Cruz"}
         </h1>
 
-        <p className="mt-2 text-xs leading-5 text-gray-600">
+        <p className="mt-3 text-xs leading-5 text-gray-600">
           {contactItems.length > 0
             ? contactItems.join(" · ")
             : "juan@email.com · +63 912 345 6789 · Cebu City, Philippines"}
         </p>
       </header>
 
-      <section className="mt-6">
-        <h2 className="border-b pb-1 text-xs font-bold uppercase tracking-wide text-gray-700">
-          Work Experience
-        </h2>
+      <Divider />
 
+      <ResumeSection title="Professional Experience">
         {experiences.length > 0 ? (
-          experiences.map((job, index) => {
-            const dateLine = formatExperienceDate(job);
+          <div className="space-y-5">
+            {experiences.map((job, index) => {
+              const dateLine = formatExperienceDate(job);
 
-            return (
-              <div
-                key={job.id || `${job.company}-${job.position}-${index}`}
-                className="mt-4"
-              >
-                <div className="flex justify-between gap-4">
-                  <div>
-                    <p className="font-bold">
-                      {job.position || "Job Title"}
-                    </p>
+              return (
+                <article
+                  key={job.id || `${job.company}-${job.position}-${index}`}
+                >
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-950">
+                        {job.position || "Job Title"}
+                      </h3>
 
-                    <p className="text-sm text-gray-600">
-                      {job.company || "Company Name"}
-                    </p>
+                      <p className="text-xs font-medium text-gray-600">
+                        {job.company || "Company Name"}
+                      </p>
+                    </div>
+
+                    {dateLine && (
+                      <p className="shrink-0 text-xs font-medium text-gray-500">
+                        {dateLine}
+                      </p>
+                    )}
                   </div>
 
-                  {dateLine && (
-                    <p className="shrink-0 text-right text-xs text-gray-500">
-                      {dateLine}
+                  {job.description && (
+                    <p className="mt-2 whitespace-pre-line text-xs leading-5 text-gray-700">
+                      {job.description}
                     </p>
                   )}
-                </div>
-
-                {job.description && (
-                  <p className="mt-2 whitespace-pre-line text-xs leading-5 text-gray-700">
-                    {job.description}
-                  </p>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          <p className="mt-3 text-xs text-gray-500">
-            Your work experience will appear here.
-          </p>
-        )}
-      </section>
-
-      <section className="mt-6">
-        <h2 className="border-b pb-1 text-xs font-bold uppercase tracking-wide text-gray-700">
-          Education
-        </h2>
-
-        {education.length > 0 ? (
-          education.map((item, index) => {
-            const dateLine = formatEducationDate(item);
-
-            return (
-              <div
-                key={item.id || `${item.school}-${item.degree}-${index}`}
-                className="mt-3"
-              >
-                <p className="font-bold">
-                  {item.degree || "Degree / Course"}
-                </p>
-
-                <p className="text-sm text-gray-600">
-                  {item.school || "School / University"}
-                </p>
-
-                {dateLine && (
-                  <p className="text-xs text-gray-500">
-                    {dateLine}
-                  </p>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          <p className="mt-3 text-xs text-gray-500">
-            Your education details will appear here.
-          </p>
-        )}
-      </section>
-
-      <section className="mt-6">
-        <h2 className="border-b pb-1 text-xs font-bold uppercase tracking-wide text-gray-700">
-          Skills
-        </h2>
-
-        {resumeData.skills.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {resumeData.skills.map((skill, index) => (
-              <span
-                key={`${skill}-${index}`}
-                className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700"
-              >
-                {skill}
-              </span>
-            ))}
+                </article>
+              );
+            })}
           </div>
         ) : (
-          <p className="mt-3 text-xs text-gray-500">
-            Your skills will appear here.
-          </p>
+          <EmptyText>Your work experience will appear here.</EmptyText>
         )}
-      </section>
+      </ResumeSection>
+
+      <ResumeSection title="Education">
+        {education.length > 0 ? (
+          <div className="space-y-4">
+            {education.map((item, index) => {
+              const dateLine = formatEducationDate(item);
+
+              return (
+                <article
+                  key={item.id || `${item.school}-${item.degree}-${index}`}
+                >
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-950">
+                        {item.degree || "Degree / Course"}
+                      </h3>
+
+                      <p className="text-xs font-medium text-gray-600">
+                        {item.school || "School / University"}
+                      </p>
+                    </div>
+
+                    {dateLine && (
+                      <p className="shrink-0 text-xs font-medium text-gray-500">
+                        {dateLine}
+                      </p>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyText>Your education details will appear here.</EmptyText>
+        )}
+      </ResumeSection>
+
+      <ResumeSection title="Core Skills">
+        {resumeData.skills.length > 0 ? (
+          <p className="text-xs leading-6 text-gray-700">
+            {resumeData.skills.join(" • ")}
+          </p>
+        ) : (
+          <EmptyText>Your skills will appear here.</EmptyText>
+        )}
+      </ResumeSection>
     </div>
+  );
+}
+
+function ResumeSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mt-7">
+      <h2 className="mb-3 border-b border-gray-300 pb-1 text-[11px] font-extrabold uppercase tracking-[0.22em] text-gray-700">
+        {title}
+      </h2>
+
+      {children}
+    </section>
+  );
+}
+
+function Divider() {
+  return <div className="mt-5 border-t-2 border-gray-900" />;
+}
+
+function EmptyText({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs italic leading-5 text-gray-400">
+      {children}
+    </p>
   );
 }
