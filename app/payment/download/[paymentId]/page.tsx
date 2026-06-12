@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ResumeTemplate from "@/components/resume/ResumeClassic";
+import ResumeTemplate from "@/components/resume/ResumeTemplate";
 import { getPaidResume } from "@/lib/payments/getPaidResume";
 import DownloadPdfButton from "@/components/payment/DownloadPdfButton";
 
