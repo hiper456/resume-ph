@@ -5,11 +5,12 @@ import ProgressBar from "@/components/wizard/ProgressBar";
 import PersonalInfo from "@/components/wizard/PersonalInfo";
 import WorkExperience from "@/components/wizard/WorkExperience";
 import ResumePreview from "@/components/preview/ResumePreview";
-import Education from "@/components/wizard/Education";
+import Education from "@/components/ai/Education";
 import Skills from "@/components/wizard/Skills";
 import Review from "@/components/wizard/Review";
 import PrintResume from "@/components/resume/PrintResume";
-import ProfessionalSummary from "@/components/wizard/ProfessionalSummary";
+import ProfessionalSummary from "@/components/ai/ProfessionalSummary";
+import CoverLetterGenerator from "@/components/ai/CoverLetterGenerator";
 
 const steps = [
   {
@@ -84,6 +85,8 @@ export default function BuilderPage() {
                 {currentStep === 6 && <Review />}
               </div>
 
+              
+
               <div className="mt-10 flex justify-between">
                 <button
                   type="button"
@@ -108,6 +111,7 @@ export default function BuilderPage() {
           </div>
 
           <ResumePreview />
+          <CoverLetterGenerator />
         </div>
       </div>
 

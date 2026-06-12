@@ -39,6 +39,7 @@ export type ResumeData = {
   experience: WorkExperience[];
   education: Education[];
   skills: string[];
+  coverLetter: string;
 };
 
 export const initialResumeData: ResumeData = {
@@ -58,6 +59,8 @@ export const initialResumeData: ResumeData = {
   },
 
   summary: "",
+
+  coverLetter: "",
 
   experience: [],
 
