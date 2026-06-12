@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { PLANS, type PlanCode } from "@/lib/permissions";
-
-const VALID_PLAN_CODES = Object.values(PLANS);
+import { isPlanCode } from "@/lib/plans/plans";
 
 export async function POST(request: Request) {
   try {
     const supabase = createAdminClient();
-    const { paymentId, planCode } = await request.json();
+    const body = await request.json();
+
+    const paymentId =
+      typeof body.paymentId === "string" ? body.paymentId : "";
+
+    const requestedPlanCode =
+      typeof body.planCode === "string"
+        ? body.planCode.trim().toLowerCase()
+        : "";
 
     if (!paymentId) {
       return NextResponse.json(
@@ -16,7 +22,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!planCode || !VALID_PLAN_CODES.includes(planCode as PlanCode)) {
+    if (!isPlanCode(requestedPlanCode)) {
       return NextResponse.json(
         { error: "Valid plan code is required." },
         { status: 400 }
@@ -24,6 +30,7 @@ export async function POST(request: Request) {
     }
 
     const { data: payment, error: paymentError } = await supabase
+      .schema("public")
       .from("payments")
       .select("id, resume_id")
       .eq("id", paymentId)
@@ -35,34 +42,46 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+const { data: allPlans, error: allPlansError } = await supabase
+  .schema("public")
+  .from("plans")
+  .select("id, code, name, price");
 
-    const { data: plan, error: planError } = await supabase
-      .from("plans")
-      .select("id, code")
-      .eq("code", planCode)
-      .eq("active", true)
-      .single();
+console.log("REQUESTED PLAN:", requestedPlanCode);
+console.log("ALL PLANS FROM API:", allPlans);
+console.log("ALL PLANS ERROR:", allPlansError);
 
-    if (planError || !plan) {
-      return NextResponse.json(
-        { error: "Selected plan not found." },
-        { status: 404 }
-      );
-    }
+const plan = allPlans?.find(
+  (item) => item.code === requestedPlanCode
+);
+
+if (!plan) {
+  return NextResponse.json(
+    {
+      error: `Selected plan not found: ${requestedPlanCode}. API sees: ${JSON.stringify(
+        allPlans
+      )}`,
+    },
+    { status: 404 }
+  );
+}
 
     const now = new Date().toISOString();
 
     const { error: paymentUpdateError } = await supabase
+      .schema("public")
       .from("payments")
       .update({
         status: "paid",
         paid_at: now,
+        plan_code: requestedPlanCode,
       })
       .eq("id", paymentId);
 
     if (paymentUpdateError) throw new Error(paymentUpdateError.message);
 
     const { error: resumeUpdateError } = await supabase
+      .schema("public")
       .from("resumes")
       .update({
         plan_id: plan.id,

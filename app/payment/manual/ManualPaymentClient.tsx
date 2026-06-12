@@ -1,25 +1,72 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const AMOUNT = 99;
+type PaymentDetails = {
+  id: string;
+  resume_id: string;
+  email: string;
+  amount: number;
+  plan_code: string;
+  status: string;
+};
 
 const PAYMENT_DETAILS = {
   accountName: "Your Account Name",
   mobileNumber: "09XX XXX XXXX",
 };
 
-export default function ManualPaymentPage() {
+function getPlanName(planCode?: string) {
+  if (planCode === "professional") return "Professional Package";
+  if (planCode === "executive") return "Executive Package";
+  return "Basic Package";
+}
+
+export default function ManualPaymentClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("paymentId");
+
+  const [payment, setPayment] = useState<PaymentDetails | null>(null);
+  const [loadingPayment, setLoadingPayment] = useState(true);
 
   const [paymentMethod, setPaymentMethod] = useState("GCash");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  useEffect(() => {
+    async function loadPayment() {
+      if (!paymentId) {
+        setMessage("Missing payment ID. Please return to the builder and try again.");
+        setIsSuccess(false);
+        setLoadingPayment(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/payments/${paymentId}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          setMessage(result.error || "Unable to load payment details.");
+          setIsSuccess(false);
+          return;
+        }
+
+        setPayment(result.payment);
+      } catch {
+        setMessage("Unable to load payment details.");
+        setIsSuccess(false);
+      } finally {
+        setLoadingPayment(false);
+      }
+    }
+
+    loadPayment();
+  }, [paymentId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,6 +124,9 @@ export default function ManualPaymentPage() {
     }
   }
 
+  const amountDisplay = loadingPayment ? "..." : payment?.amount ?? "...";
+  const planName = getPlanName(payment?.plan_code);
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_35%),linear-gradient(to_bottom,#f8fafc,#eef2ff)] px-4 py-6 text-slate-900 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-6xl">
@@ -89,9 +139,6 @@ export default function ManualPaymentPage() {
 
         <div className="grid overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-blue-950/10 ring-1 ring-slate-200 lg:grid-cols-[0.95fr_1.05fr]">
           <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-slate-950 p-6 text-white sm:p-8 lg:p-10">
-            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-blue-300/20 blur-3xl" />
-
             <div className="relative">
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-blue-100">
                 Resume PH Checkout
@@ -102,19 +149,18 @@ export default function ManualPaymentPage() {
               </h1>
 
               <p className="mt-4 max-w-md text-sm leading-6 text-blue-100">
-                Complete your one-time payment through GCash, Maya, or bank
-                transfer. Submit your reference number so we can verify and
-                unlock your download.
+                Complete your one-time payment and submit your reference number
+                so we can verify and unlock your download.
               </p>
 
               <div className="mt-8 rounded-3xl bg-white/10 p-5 ring-1 ring-white/15 backdrop-blur">
                 <p className="text-sm font-medium text-blue-100">
-                  Total Amount
+                  {planName}
                 </p>
 
                 <div className="mt-2 flex items-end gap-2">
                   <p className="text-6xl font-black tracking-tight">
-                    ₱{AMOUNT}
+                    ₱{amountDisplay}
                   </p>
                   <p className="mb-2 text-sm font-semibold text-blue-100">
                     one-time
@@ -122,7 +168,7 @@ export default function ManualPaymentPage() {
                 </div>
 
                 <div className="mt-5 grid gap-2 text-sm text-blue-50">
-                  <FeatureCheck text="Professional PDF download" />
+                  <FeatureCheck text="PDF download access" />
                   <FeatureCheck text="No subscription or hidden fees" />
                   <FeatureCheck text="Manual payment verification" />
                 </div>
@@ -132,7 +178,7 @@ export default function ManualPaymentPage() {
                 <CheckoutStep
                   number="1"
                   title="Send payment"
-                  description={`Pay exactly ₱${AMOUNT} using your chosen method.`}
+                  description={`Pay exactly ₱${amountDisplay} using your chosen method.`}
                   active
                 />
                 <CheckoutStep
@@ -144,7 +190,7 @@ export default function ManualPaymentPage() {
                 <CheckoutStep
                   number="3"
                   title="PDF unlocked"
-                  description="After approval, your professional resume PDF becomes available."
+                  description="After approval, your resume PDF becomes available."
                 />
               </div>
             </div>
@@ -162,46 +208,16 @@ export default function ManualPaymentPage() {
               </div>
 
               <div className="w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-blue-100">
-                ₱{AMOUNT}
+                ₱{amountDisplay}
               </div>
             </div>
 
             <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-base font-bold text-slate-950">
-                    GCash / Maya / Bank Transfer
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Send the payment to the account below.
-                  </p>
-                </div>
-
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
-                  Manual
-                </span>
-              </div>
-
               <div className="mt-5 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                <InfoRow
-                  label="Account Name"
-                  value={PAYMENT_DETAILS.accountName}
-                />
-                <InfoRow
-                  label="Mobile Number"
-                  value={PAYMENT_DETAILS.mobileNumber}
-                />
-                <InfoRow label="Amount" value={`₱${AMOUNT}`} />
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-bold text-amber-900">
-                  Important
-                </p>
-                <p className="mt-1 text-sm leading-6 text-amber-800">
-                  Send the exact amount and keep your payment receipt. You will
-                  need the reference number for verification.
-                </p>
+                <InfoRow label="Package" value={planName} />
+                <InfoRow label="Account Name" value={PAYMENT_DETAILS.accountName} />
+                <InfoRow label="Mobile Number" value={PAYMENT_DETAILS.mobileNumber} />
+                <InfoRow label="Amount" value={`₱${amountDisplay}`} />
               </div>
             </div>
 
@@ -214,7 +230,7 @@ export default function ManualPaymentPage() {
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 >
                   <option value="GCash">GCash</option>
                   <option value="Maya">Maya</option>
@@ -233,21 +249,16 @@ export default function ManualPaymentPage() {
                   value={referenceNumber}
                   onChange={(e) => setReferenceNumber(e.target.value)}
                   placeholder="Example: 123456789012"
-                  className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
-
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  You can find this in your GCash, Maya, or bank transfer
-                  receipt.
-                </p>
               </div>
 
               {message && (
                 <div
                   className={`rounded-2xl p-4 text-sm font-medium leading-6 ${
                     isSuccess
-                      ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
-                      : "bg-red-50 text-red-700 ring-1 ring-red-200"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
                   }`}
                 >
                   {message}
@@ -256,12 +267,10 @@ export default function ManualPaymentPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="group h-13 w-full rounded-2xl bg-blue-700 px-5 py-3 text-base font-black text-white shadow-xl shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800 active:translate-y-0 disabled:cursor-not-allowed disabled:bg-blue-300 disabled:shadow-none"
+                disabled={isSubmitting || loadingPayment || !payment}
+                className="group w-full rounded-2xl bg-blue-700 px-5 py-3 text-base font-black text-white shadow-xl shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800 active:translate-y-0 disabled:cursor-not-allowed disabled:bg-blue-300 disabled:shadow-none"
               >
-                {isSubmitting
-                  ? "Submitting..."
-                  : "I’ve Paid — Submit Reference"}
+                {isSubmitting ? "Submitting..." : "I’ve Paid — Submit Reference"}
                 {!isSubmitting && (
                   <span className="ml-1 inline-block transition group-hover:translate-x-1">
                     →
@@ -269,12 +278,6 @@ export default function ManualPaymentPage() {
                 )}
               </button>
             </form>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <TrustCard title="Secure" description="Manual review" />
-              <TrustCard title="One-time" description="No subscription" />
-              <TrustCard title="Fast" description="PDF unlock" />
-            </div>
 
             <p className="mt-6 text-center text-xs leading-5 text-slate-500">
               Having trouble? Contact support with your payment ID and receipt
@@ -335,32 +338,11 @@ function CheckoutStep({
   );
 }
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <span className="text-sm font-medium text-slate-500">{label}</span>
       <span className="text-base font-black text-slate-950">{value}</span>
-    </div>
-  );
-}
-
-function TrustCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
-      <p className="text-sm font-black text-slate-950">{title}</p>
-      <p className="mt-1 text-xs text-slate-500">{description}</p>
     </div>
   );
 }

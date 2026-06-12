@@ -11,6 +11,18 @@ export default function Review() {
   const fullName =
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim();
 
+  const selectedTemplate = resumeData.templateId ?? "basic";
+
+  const planCode =
+    selectedTemplate === "modern" || selectedTemplate === "executive"
+      ? "professional"
+      : "basic";
+
+  const planLabel =
+    planCode === "professional" ? "Professional Package" : "Basic Package";
+
+  const planPrice = planCode === "professional" ? 199 : 99;
+
   async function handleUnlockDownload() {
     try {
       setIsCheckingOut(true);
@@ -23,21 +35,22 @@ export default function Review() {
         },
         body: JSON.stringify({
           resumeData,
+          planCode,
         }),
       });
 
       const contentType = response.headers.get("content-type");
 
-if (!contentType?.includes("application/json")) {
-  const text = await response.text();
-  console.error("Non-JSON response:", text);
+      if (!contentType?.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text);
 
-  throw new Error(
-    "Checkout API is not returning JSON. Check if /api/payments/create-checkout exists."
-  );
-}
+        throw new Error(
+          "Checkout API is not returning JSON. Check /api/payments/create-checkout."
+        );
+      }
 
-const data = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Unable to create checkout session.");
@@ -140,7 +153,16 @@ const data = await response.json();
         <h3 className="font-bold">Ready to Download</h3>
 
         <p className="mt-1 text-sm">
-          Unlock your professional PDF resume using secure checkout.
+          Selected package:{" "}
+          <span className="font-bold">
+            {planLabel} — ₱{planPrice}
+          </span>
+        </p>
+
+        <p className="mt-1 text-sm">
+          {planCode === "professional"
+            ? "Includes premium templates, AI tools, cover letter, and PDF download."
+            : "Includes basic PDF download using the basic template."}
         </p>
 
         {checkoutError && (
@@ -155,7 +177,9 @@ const data = await response.json();
           disabled={isCheckingOut}
           className="mt-4 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
         >
-          {isCheckingOut ? "Creating checkout..." : "🔒 Unlock & Download PDF"}
+          {isCheckingOut
+            ? "Creating checkout..."
+            : `🔒 Unlock & Download PDF — ₱${planPrice}`}
         </button>
 
         <p className="mt-3 text-xs text-green-700">

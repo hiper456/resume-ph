@@ -116,7 +116,7 @@ export default function BuilderPage() {
                   ← Back
                 </button>
 
-                {!isLastStep ? (
+                {!isLastStep && (
                   <button
                     type="button"
                     onClick={goNext}
@@ -124,13 +124,6 @@ export default function BuilderPage() {
                   >
                     Next →
                   </button>
-                ) : (
-                  <a
-                    href="/payment/manual"
-                    className="rounded-lg bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 sm:px-8"
-                  >
-                    Unlock PDF →
-                  </a>
                 )}
               </div>
             </div>
@@ -138,11 +131,8 @@ export default function BuilderPage() {
 
           <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <TemplateSelector />
-
             <ResumePreview />
-
             <ResumeScore />
-
             <CoverLetterGenerator />
           </aside>
         </div>
