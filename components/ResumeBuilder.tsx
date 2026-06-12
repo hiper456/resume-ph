@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+
 export default function ResumeBuilder() {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -23,6 +24,13 @@ export default function ResumeBuilder() {
       [e.target.name]: e.target.value,
     });
   }
+
+  const handlePrice = () => {
+  document.getElementById("Pricing")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+};
 
   return (
     <section id="builder" className="bg-slate-50 py-20">
@@ -49,12 +57,12 @@ export default function ResumeBuilder() {
               <textarea name="education" placeholder="Education" rows={3} value={formData.education} onChange={handleChange} className="w-full rounded-xl border p-4" />
               <textarea name="skills" placeholder="Skills" rows={3} value={formData.skills} onChange={handleChange} className="w-full rounded-xl border p-4" />
 
-              <a
-                href="#pricing"
-                className="block w-full rounded-xl bg-blue-700 py-4 text-center font-bold text-white hover:bg-blue-800"
+              <button
+                onClick={handlePrice}
+                className="block w-full cursor-pointer rounded-xl bg-blue-700 py-4 text-center font-bold text-white hover:bg-blue-800"
               >
                 Continue to Pricing
-              </a>
+              </button>
             </div>
           </div>
 

@@ -1,3 +1,5 @@
+"use client";
+
 const benefits = [
   "ATS-Friendly Resume",
   "AI-Assisted Writing",
@@ -52,6 +54,23 @@ const skills = [
   "Problem Solving",
 ];
 
+const ctaButtonClass =
+  "group inline-flex cursor-pointer items-center justify-center rounded-2xl bg-white px-8 py-4 text-lg font-semibold text-blue-700 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:bg-blue-50 hover:shadow-2xl active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300";
+
+const handleStart = () => {
+  document.getElementById("resume-builder")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+};
+
+const handlePrice = () => {
+  document.getElementById("Pricing")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+};
+
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-800 to-indigo-900 text-white">
@@ -75,19 +94,19 @@ export default function Hero() {
           </p>
 
           <div className="mt-10 flex flex-wrap gap-5">
-            <a
-              href="/builder"
-              className="rounded-xl bg-white px-8 py-4 text-lg font-bold text-blue-800 shadow-xl transition duration-200 hover:-translate-y-1 hover:bg-blue-50"
-            >
-              Start Building — Free
-            </a>
+            <button onClick={handleStart} className={ctaButtonClass}>
+              🚀 Build My Resume Free
+              <span className="ml-2 transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </button>
 
-            <a
-              href="#pricing"
-              className="rounded-xl border border-white/30 px-8 py-4 text-lg font-bold transition hover:bg-white hover:text-blue-900"
-            >
+            <button onClick={handlePrice} className={ctaButtonClass}>
               View Pricing
-            </a>
+              <span className="ml-2 transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </button>
           </div>
 
           <p className="mt-4 text-sm text-blue-200">
@@ -109,9 +128,7 @@ export default function Hero() {
               {steps.map((step) => (
                 <div key={step.title}>
                   <div className="mb-2 text-3xl">{step.icon}</div>
-
                   <p className="font-semibold">{step.title}</p>
-
                   <p className="mt-1 text-sm text-blue-100">
                     {step.description}
                   </p>
