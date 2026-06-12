@@ -2,6 +2,8 @@ import { getPendingPayments } from "@/lib/payments/getPendingPayments";
 import PaymentActions from "@/components/admin/PaymentActions";
 import AdminLogoutButton from "@/components/admin/AdminLogoutButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPaymentsPage() {
   const payments = await getPendingPayments();
 
