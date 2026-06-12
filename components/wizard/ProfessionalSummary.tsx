@@ -22,40 +22,54 @@ export default function ProfessionalSummary() {
     });
   }
 
-  async function generateSummary() {
-    try {
-      setLoading(true);
-      setError("");
+async function generateSummary() {
+  try {
+    setLoading(true);
+    setError("");
 
-      const response = await fetch("/api/generate-summary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: `${resumeData.personal.firstName} ${resumeData.personal.lastName}`,
-          experience: resumeData.experience,
-          education: resumeData.education,
-          skills: resumeData.skills,
-        }),
-      });
+    const response = await fetch("/api/generate-summary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        resumeId: resumeData.id,
+        name: `${resumeData.personal.firstName} ${resumeData.personal.lastName}`,
+        experience: resumeData.experience,
+        education: resumeData.education,
+        skills: resumeData.skills,
+      }),
+    });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate summary.");
-      }
+    const data = await response.json();
 
-      const data = await response.json();
-
-      setResumeData({
-        ...resumeData,
-        summary: data.summary,
-      });
-    } catch {
-      setError("AI summary generation failed. Please try again.");
-    } finally {
-      setLoading(false);
+    if (response.status === 403 && data.code === "FEATURE_LOCKED") {
+      setError(data.error);
+      return;
     }
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to generate summary.");
+    }
+
+    if (!data.summary) {
+      throw new Error("No summary returned.");
+    }
+
+    setResumeData((prev) => ({
+      ...prev,
+      summary: data.summary,
+    }));
+  } catch (error) {
+    setError(
+      error instanceof Error
+        ? error.message
+        : "AI summary generation failed. Please try again."
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="mt-8 space-y-5">

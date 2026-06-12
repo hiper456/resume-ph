@@ -80,48 +80,58 @@ export default function WorkExperience() {
     }
   }
 
-  async function rewriteExperienceWithAI() {
-    if (!draft.description.trim()) {
-      setAiError("Add a rough description first, then let AI improve it.");
+async function rewriteExperienceWithAI() {
+  if (!draft.description.trim()) {
+    setAiError("Add a rough description first, then let AI improve it.");
+    return;
+  }
+
+  try {
+    setAiLoading(true);
+    setAiError("");
+
+    const response = await fetch("/api/improve-experience", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        resumeId: resumeData.id,
+        position: draft.position,
+        company: draft.company,
+        description: draft.description,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.status === 403 && data.code === "FEATURE_LOCKED") {
+      setAiError(data.error);
       return;
     }
 
-    try {
-      setAiLoading(true);
-      setAiError("");
-
-      const response = await fetch("/api/improve-experience", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          position: draft.position,
-          company: draft.company,
-          description: draft.description,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to improve experience.");
-      }
-
-      const data = await response.json();
-
-      if (!data.description) {
-        throw new Error("No improved description returned.");
-      }
-
-      setDraft({
-        ...draft,
-        description: data.description,
-      });
-    } catch {
-      setAiError("AI rewrite failed. Please try again.");
-    } finally {
-      setAiLoading(false);
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to improve experience.");
     }
+
+    if (!data.description) {
+      throw new Error("No improved description returned.");
+    }
+
+    setDraft((prev) => ({
+      ...prev,
+      description: data.description,
+    }));
+  } catch (error) {
+    setAiError(
+      error instanceof Error
+        ? error.message
+        : "AI rewrite failed. Please try again."
+    );
+  } finally {
+    setAiLoading(false);
   }
+}
 
   function saveExperience() {
     const cleanDraft = normalizeExperience(draft);
