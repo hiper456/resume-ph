@@ -12,40 +12,44 @@ export default function ResumePreview() {
 
   return (
     <div className="rounded-2xl border bg-white p-4 shadow-sm">
-      {isPremiumTemplate ? (
-        <div className="relative">
-          <div className="pointer-events-none select-none blur-[2px]">
-            <ResumeTemplate resumeData={resumeData} />
-          </div>
+      <div className="relative overflow-hidden rounded-xl">
+        <ResumeTemplate resumeData={resumeData} />
 
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/70 p-8 text-center backdrop-blur-sm">
-            <div className="max-w-sm rounded-2xl border bg-white p-6 shadow-xl">
-              <p className="mb-2 text-3xl">🔒</p>
+        {isPremiumTemplate && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-white/10 backdrop-blur-[1px]" />
 
-              <h3 className="text-lg font-semibold text-slate-900">
+            <div className="pointer-events-none absolute inset-0 flex rotate-[-24deg] items-center justify-center">
+              <p className="select-none text-4xl font-black uppercase tracking-[0.35em] text-slate-900/10">
+                Premium
+              </p>
+            </div>
+
+            <div className="absolute inset-x-4 bottom-4 rounded-2xl border bg-white/90 p-5 text-center shadow-xl backdrop-blur">
+              <p className="text-2xl">🔒</p>
+
+              <h3 className="mt-1 text-lg font-semibold text-slate-900">
                 Premium Template
               </h3>
 
               <p className="mt-2 text-sm text-slate-500">
-                Upgrade to Professional to use the{" "}
+                You are previewing the{" "}
                 <span className="font-semibold text-slate-700">
                   {selectedTemplate?.name}
                 </span>{" "}
-                template.
+                template. Upgrade to Professional to unlock download access.
               </p>
 
               <button
                 type="button"
-                className="mt-5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="mt-4 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
               >
                 Upgrade to Professional
               </button>
             </div>
-          </div>
-        </div>
-      ) : (
-        <ResumeTemplate resumeData={resumeData} />
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

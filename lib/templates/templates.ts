@@ -2,12 +2,15 @@ import { FEATURES } from "@/lib/permissions/constants";
 
 export type ResumeTemplateId = "basic" | "modern" | "executive";
 
+export type FeatureCode =
+  (typeof FEATURES)[keyof typeof FEATURES];
+  
 export type TemplateConfig = {
   id: ResumeTemplateId;
   name: string;
   description: string;
   isPremium: boolean;
-  requiredFeature?: string;
+  requiredFeature?: FeatureCode;
 };
 
 export const RESUME_TEMPLATES: TemplateConfig[] = [
