@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useResume } from "@/context/ResumeContext";
+import { ResumeData } from "@/types/resume";
 
-export default function DownloadPdfButton() {
-  const { resumeData } = useResume();
+type DownloadPdfButtonProps = {
+  resumeData: ResumeData;
+  resumeId: string;
+};
+
+export default function DownloadPdfButton({
+  resumeData,
+  resumeId,
+}: DownloadPdfButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,7 +26,7 @@ export default function DownloadPdfButton() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          resumeId: resumeData.id,
+          resumeId,
           templateId: resumeData.templateId ?? "basic",
         }),
       });
@@ -27,12 +34,7 @@ export default function DownloadPdfButton() {
       const result = await response.json();
 
       if (!response.ok) {
-        if (result.code === "PAYMENT_REQUIRED") {
-          window.location.href = `/payment/manual?resumeId=${resumeData.id}`;
-          return;
-        }
-
-        setError(result.error || "Unable to verify download access.");
+        setError(result.error || "This download is not allowed.");
         return;
       }
 

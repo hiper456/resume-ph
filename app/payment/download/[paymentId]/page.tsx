@@ -73,12 +73,18 @@ export default async function PaymentDownloadPage({
                   label="Email"
                   value={resumeData.personal.email || "No email"}
                 />
-                <InfoItem label="Template" value="Classic" />
+                <InfoItem
+  label="Template"
+  value={getTemplateLabel(resumeData.templateId)}
+/>
                 <InfoItem label="Payment ID" value={verifiedPaymentId} />
               </div>
             </div>
 
-           <DownloadPdfButton />
+                  <DownloadPdfButton
+          resumeData={resumeData}
+          resumeId={paidResume.resumeId}
+        />
           </div>
         </div>
 
@@ -105,4 +111,10 @@ function InfoItem({
       <p className="mt-1 break-all font-bold text-gray-900">{value}</p>
     </div>
   );
+}
+
+function getTemplateLabel(templateId?: string) {
+  if (templateId === "modern") return "Modern";
+  if (templateId === "executive") return "Executive";
+  return "Classic";
 }

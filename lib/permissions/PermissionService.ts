@@ -14,28 +14,42 @@ export class PermissionService {
     const { data, error } = await supabase
       .from("resumes")
       .select(`
-        plan_id,
-        plans (
-          plan_features (
-            features (
-              code
-            )
-          )
-        )
+        id,
+        plan_id
       `)
       .eq("id", resumeId)
       .single();
 
-    if (error || !data || !data.plans) {
+    if (error || !data?.plan_id) {
+      console.log("PERMISSION RESUME ERROR:", { resumeId, error, data });
       return false;
     }
 
-    const plan = Array.isArray(data.plans) ? data.plans[0] : data.plans;
+    const { data: rows, error: featureError } = await supabase
+      .from("plan_features")
+      .select(`
+        features (
+          code
+        )
+      `)
+      .eq("plan_id", data.plan_id);
 
-    const featureCodes =
-      plan.plan_features?.map((item: any) => item.features.code) ?? [];
+    if (featureError || !rows) {
+      console.log("PERMISSION FEATURE ERROR:", {
+        planId: data.plan_id,
+        featureError,
+        rows,
+      });
+      return false;
+    }
 
-    return featureCodes.includes(feature);
+    const featureCodes = rows
+      .map((row: any) => row.features?.code)
+      .filter(Boolean);
+
+    const allowed = featureCodes.includes(feature);
+
+    return allowed;
   }
 
   static async requireFeature({

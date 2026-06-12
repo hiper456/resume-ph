@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
     await PermissionService.requireFeature({
       resumeId,
       feature: FEATURES.PDF_DOWNLOAD,
@@ -80,6 +81,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Download verification error:", error);
+    
+console.error("VERIFY FAILED:", {
+  message: error instanceof Error ? error.message : error,
+});
 
     return NextResponse.json(
       {
