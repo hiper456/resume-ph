@@ -1,4 +1,6 @@
-import { supabase } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+
+const supabase = createAdminClient();
 
 export async function createPayment({
   resumeId,

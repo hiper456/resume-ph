@@ -1,5 +1,7 @@
 import { ResumeData } from "@/types/resume";
-import { supabase } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+
+const supabase = createAdminClient();
 
 export async function getPaidResume(paymentId: string) {
   const { data, error } = await supabase

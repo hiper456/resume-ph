@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+
+const supabase = createAdminClient();
 
 export async function POST(request: Request) {
   try {
