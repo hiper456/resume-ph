@@ -3,18 +3,36 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function PaymentActions({
-  paymentId,
-}: {
-  paymentId: string;
-}) {
+const plans = [
+  {
+    code: "basic",
+    name: "Basic",
+    price: "₱99",
+    description: "PDF download",
+  },
+  {
+    code: "professional",
+    name: "Professional",
+    price: "₱199",
+    description: "AI + templates",
+  },
+  {
+    code: "executive",
+    name: "Executive",
+    price: "₱399",
+    description: "Everything unlocked",
+  },
+];
+
+export default function PaymentActions({ paymentId }: { paymentId: string }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [planCode, setPlanCode] = useState("basic");
 
   async function updatePayment(action: "approve" | "reject") {
     const confirmed = window.confirm(
       action === "approve"
-        ? "Approve this payment and unlock the resume?"
+        ? `Approve payment and assign ${planCode.toUpperCase()} plan?`
         : "Reject this payment?"
     );
 
@@ -30,6 +48,7 @@ export default function PaymentActions({
         },
         body: JSON.stringify({
           paymentId,
+          planCode,
         }),
       });
 
@@ -41,35 +60,65 @@ export default function PaymentActions({
 
       router.refresh();
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please try again."
-      );
+      alert(error instanceof Error ? error.message : "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-<button
-  type="button"
-  disabled={isLoading}
-  onClick={() => updatePayment("approve")}
-  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-emerald-700 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
->
-  ✓ Approve Payment
-</button>
+    <div className="mt-6 border-t pt-6">
+      <p className="mb-3 text-sm font-semibold text-slate-700">
+        Assign Plan
+      </p>
 
-<button
-  type="button"
-  disabled={isLoading}
-  onClick={() => updatePayment("reject")}
-  className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-5 py-2.5 font-semibold text-red-600 transition-all duration-200 hover:bg-red-50 hover:border-red-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
->
-  ✕ Reject
-</button>
+      <div className="grid gap-3 md:grid-cols-3">
+        {plans.map((plan) => {
+          const selected = planCode === plan.code;
+
+          return (
+            <button
+              key={plan.code}
+              type="button"
+              disabled={isLoading}
+              onClick={() => setPlanCode(plan.code)}
+              className={`rounded-xl border p-4 text-left transition ${
+                selected
+                  ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100"
+                  : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <p className="font-bold">{plan.name}</p>
+                {selected && <span className="text-emerald-600">✓</span>}
+              </div>
+
+              <p className="mt-1 text-2xl font-black">{plan.price}</p>
+              <p className="mt-1 text-sm text-slate-500">{plan.description}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 flex gap-3">
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() => updatePayment("approve")}
+          className="rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {isLoading ? "Processing..." : "Approve"}
+        </button>
+
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() => updatePayment("reject")}
+          className="rounded-xl border border-red-200 bg-white px-6 py-3 font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+        >
+          Reject
+        </button>
+      </div>
     </div>
   );
 }

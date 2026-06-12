@@ -69,7 +69,9 @@ export default async function AdminPaymentsPage() {
       </div>
     </div>
 
-    <PaymentActions paymentId={payment.id} />
+    <PaymentActions
+  paymentId={payment.id}
+/>
   </div>
 ))}
 
