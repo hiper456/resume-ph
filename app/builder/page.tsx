@@ -11,6 +11,8 @@ import Review from "@/components/wizard/Review";
 import PrintResume from "@/components/resume/PrintResume";
 import ProfessionalSummary from "@/components/ai/ProfessionalSummary";
 import CoverLetterGenerator from "@/components/ai/CoverLetterGenerator";
+import TemplateSelector from "@/components/resume/TemplateSelector";
+import ResumeScore from "@/components/preview/ResumeScore";
 
 const steps = [
   {
@@ -48,33 +50,52 @@ export default function BuilderPage() {
 
   function goNext() {
     if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep((step) => step + 1);
     }
   }
 
   function goBack() {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep((step) => step - 1);
     }
   }
 
   return (
     <main className="min-h-screen bg-slate-50 print:min-h-0 print:bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-12 print:hidden">
-        <h1 className="text-4xl font-bold">Build Your Resume</h1>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12 print:hidden">
+        <header className="mb-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">
+            Resume PH Builder
+          </p>
 
-        <p className="mt-2 text-gray-600">
-          Complete the steps below to generate your professional resume.
-        </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            Build Your Resume
+          </h1>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_0.9fr]">
-          <div className="rounded-2xl bg-white p-10 shadow-lg">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            Complete the steps below, choose a template, and preview your
+            professional resume in real time.
+          </p>
+        </header>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_520px]">
+          <section className="rounded-2xl bg-white p-5 shadow-lg sm:p-8 lg:p-10">
             <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
             <div className="mx-auto max-w-3xl">
-              <h2 className="text-3xl font-bold">{step.title}</h2>
+              <div className="mt-8">
+                <p className="text-sm font-medium text-blue-700">
+                  Step {currentStep} of {steps.length}
+                </p>
 
-              <p className="mt-2 text-gray-500">{step.description}</p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">
+                  {step.title}
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {step.description}
+                </p>
+              </div>
 
               <div className="mt-8">
                 {currentStep === 1 && <PersonalInfo />}
@@ -85,33 +106,45 @@ export default function BuilderPage() {
                 {currentStep === 6 && <Review />}
               </div>
 
-              
-
-              <div className="mt-10 flex justify-between">
+              <div className="mt-10 flex items-center justify-between gap-4">
                 <button
                   type="button"
                   onClick={goBack}
                   disabled={currentStep === 1}
-                  className="rounded-lg border px-8 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:px-8"
                 >
                   ← Back
                 </button>
 
-                {!isLastStep && (
+                {!isLastStep ? (
                   <button
                     type="button"
                     onClick={goNext}
-                    className="rounded-lg bg-blue-700 px-8 py-3 font-semibold text-white transition hover:bg-blue-800"
+                    className="rounded-lg bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 sm:px-8"
                   >
                     Next →
                   </button>
+                ) : (
+                  <a
+                    href="/payment/manual"
+                    className="rounded-lg bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 sm:px-8"
+                  >
+                    Unlock PDF →
+                  </a>
                 )}
               </div>
             </div>
-          </div>
+          </section>
 
-          <ResumePreview />
-          <CoverLetterGenerator />
+          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <TemplateSelector />
+
+            <ResumePreview />
+
+            <ResumeScore />
+
+            <CoverLetterGenerator />
+          </aside>
         </div>
       </div>
 

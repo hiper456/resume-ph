@@ -1,7 +1,7 @@
 "use client";
 
 import { useResume } from "@/context/ResumeContext";
-import ResumeTemplate from "./ResumeTemplate";
+import ResumeTemplate from "./ResumeClassic";
 
 export default function PrintResume() {
   const { resumeData } = useResume();

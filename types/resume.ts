@@ -28,7 +28,7 @@ export type Education = {
 
 export type ResumeData = {
   id: string;
-
+  templateId?: "basic" | "modern" | "executive";
   createdAt: string;
   updatedAt: string;
 
@@ -44,7 +44,7 @@ export type ResumeData = {
 
 export const initialResumeData: ResumeData = {
   id: "",
-
+  templateId: "basic",
   createdAt: "",
   updatedAt: "",
 
