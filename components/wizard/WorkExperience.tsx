@@ -5,6 +5,10 @@ import { useResume } from "@/context/ResumeContext";
 import type { WorkExperience } from "@/types/resume";
 import { sortExperienceNewestFirst } from "@/utils/sortResumeEntries";
 
+type WorkExperienceProps = {
+  canUseAi?: boolean;
+};
+
 const months = [
   "January",
   "February",
@@ -54,7 +58,9 @@ function normalizeExperience(item: WorkExperience): WorkExperience {
   };
 }
 
-export default function WorkExperience() {
+export default function WorkExperience({
+  canUseAi = false,
+}: WorkExperienceProps) {
   const { resumeData, setResumeData } = useResume();
 
   const [draft, setDraft] = useState<WorkExperience>(emptyExperience());
@@ -80,56 +86,89 @@ export default function WorkExperience() {
     }
   }
 
-async function rewriteExperienceWithAI() {
-  if (!draft.description.trim()) {
-    setAiError("Add a rough description first, then let AI improve it.");
-    return;
+  async function rewriteExperienceWithAI() {
+    if (!draft.description.trim()) {
+      setAiError("Add a rough description first, then let AI improve it.");
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      setAiError("");
+
+      const response = await fetch("/api/improve-experience", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resumeId: resumeData.id,
+          position: draft.position,
+          company: draft.company,
+          description: draft.description,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 403 && data.code === "FEATURE_LOCKED") {
+        setAiError(data.error);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to improve experience.");
+      }
+
+      if (!data.description) {
+        throw new Error("No improved description returned.");
+      }
+
+      setDraft((prev) => ({
+        ...prev,
+        description: data.description,
+      }));
+    } catch (error) {
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : "AI rewrite failed. Please try again."
+      );
+    } finally {
+      setAiLoading(false);
+    }
   }
 
+  async function handleUpgradeToProfessional() {
   try {
-    setAiLoading(true);
-    setAiError("");
-
-    const response = await fetch("/api/improve-experience", {
+    const response = await fetch("/api/payments/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        resumeId: resumeData.id,
-        position: draft.position,
-        company: draft.company,
-        description: draft.description,
+        resumeData,
+        planCode: "professional",
       }),
     });
 
     const data = await response.json();
 
-    if (response.status === 403 && data.code === "FEATURE_LOCKED") {
-      setAiError(data.error);
-      return;
-    }
-
     if (!response.ok) {
-      throw new Error(data.error || "Failed to improve experience.");
+      throw new Error(data.error || "Unable to start checkout.");
     }
 
-    if (!data.description) {
-      throw new Error("No improved description returned.");
+    if (!data.checkoutUrl) {
+      throw new Error("Checkout URL was not returned.");
     }
 
-    setDraft((prev) => ({
-      ...prev,
-      description: data.description,
-    }));
+    window.location.href = data.checkoutUrl;
   } catch (error) {
     setAiError(
       error instanceof Error
         ? error.message
-        : "AI rewrite failed. Please try again."
+        : "Unable to start checkout. Please try again."
     );
-  } finally {
-    setAiLoading(false);
   }
 }
 
@@ -215,9 +254,7 @@ async function rewriteExperienceWithAI() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-bold">
-                    {item.position || "Job Title"}
-                  </p>
+                  <p className="font-bold">{item.position || "Job Title"}</p>
 
                   <p className="text-sm text-gray-600">
                     {item.company || "Company Name"}
@@ -300,9 +337,7 @@ async function rewriteExperienceWithAI() {
               <input
                 type="checkbox"
                 checked={draft.isCurrent}
-                onChange={(e) =>
-                  updateDraft("isCurrent", e.target.checked)
-                }
+                onChange={(e) => updateDraft("isCurrent", e.target.checked)}
               />
               I currently work here
             </label>
@@ -332,21 +367,21 @@ async function rewriteExperienceWithAI() {
                 Responsibilities / Achievements
               </label>
 
-              <button
-                type="button"
-                onClick={rewriteExperienceWithAI}
-                disabled={aiLoading}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {aiLoading ? "Rewriting..." : "✨ Rewrite with AI"}
-              </button>
+              {canUseAi && (
+                <button
+                  type="button"
+                  onClick={rewriteExperienceWithAI}
+                  disabled={aiLoading}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {aiLoading ? "Rewriting..." : "✨ Rewrite with AI"}
+                </button>
+              )}
             </div>
 
             <textarea
               value={draft.description}
-              onChange={(e) =>
-                updateDraft("description", e.target.value)
-              }
+              onChange={(e) => updateDraft("description", e.target.value)}
               className="min-h-40 w-full rounded-lg border p-3 leading-7 focus:border-blue-500 focus:outline-none"
               placeholder="Example: Maintained engine room machinery, monitored equipment condition, assisted with inspections, and supported safe vessel operations."
             />
@@ -357,15 +392,37 @@ async function rewriteExperienceWithAI() {
               </p>
             )}
 
-            <div className="mt-3 rounded-xl bg-indigo-50 p-4 text-sm text-indigo-800">
-              <p className="font-semibold">AI writing assistant</p>
+            {canUseAi ? (
+              <div className="mt-3 rounded-xl bg-indigo-50 p-4 text-sm text-indigo-800">
+                <p className="font-semibold">AI writing assistant</p>
 
-              <p className="mt-1 leading-6">
-                Write rough notes such as “maintained engines” or “handled
-                daily inspections,” then let AI turn them into professional
-                resume bullet points.
-              </p>
-            </div>
+                <p className="mt-1 leading-6">
+                  Write rough notes such as “maintained engines” or “handled
+                  daily inspections,” then let AI turn them into professional
+                  resume bullet points.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-xl border border-dashed border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
+                <p className="font-semibold text-indigo-900">
+                  ✨ AI Experience Rewrite is available on Professional
+                </p>
+
+                <p className="mt-1 leading-6">
+                  You can still write your responsibilities manually. Upgrade to
+                  Professional to turn rough notes into polished, ATS-friendly
+                  bullet points.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleUpgradeToProfessional}
+                  className="mt-3 inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                >
+                  Upgrade to Professional →
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

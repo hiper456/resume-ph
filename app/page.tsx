@@ -20,7 +20,7 @@ export default function Home() {
       
       <HowItWorks />
 
-      <section id="Pricing">
+      <section id="pricing">
         <Pricing />
       </section>
 

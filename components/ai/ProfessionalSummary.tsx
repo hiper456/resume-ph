@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useResume } from "@/context/ResumeContext";
 
-export default function ProfessionalSummary() {
+type ProfessionalSummaryProps = {
+  canUseAi?: boolean;
+};
+
+export default function ProfessionalSummary({
+  canUseAi = false,
+}: ProfessionalSummaryProps) {
   const { resumeData, setResumeData } = useResume();
 
   const [loading, setLoading] = useState(false);
@@ -22,61 +28,97 @@ export default function ProfessionalSummary() {
     });
   }
 
-async function generateSummary() {
+  async function handleUpgradeToProfessional() {
   try {
     setLoading(true);
     setError("");
 
-    const response = await fetch("/api/generate-summary", {
+    const response = await fetch("/api/payments/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        resumeId: resumeData.id,
-        name: `${resumeData.personal.firstName} ${resumeData.personal.lastName}`,
-        experience: resumeData.experience,
-        education: resumeData.education,
-        skills: resumeData.skills,
+        resumeData,
+        planCode: "professional",
       }),
     });
 
     const data = await response.json();
 
-    if (response.status === 403 && data.code === "FEATURE_LOCKED") {
-      setError(data.error);
-      return;
-    }
-
     if (!response.ok) {
-      throw new Error(data.error || "Failed to generate summary.");
+      throw new Error(data.error || "Unable to start checkout.");
     }
 
-    if (!data.summary) {
-      throw new Error("No summary returned.");
+    if (!data.checkoutUrl) {
+      throw new Error("Checkout URL was not returned.");
     }
 
-    setResumeData((prev) => ({
-      ...prev,
-      summary: data.summary,
-    }));
+    window.location.href = data.checkoutUrl;
   } catch (error) {
     setError(
       error instanceof Error
         ? error.message
-        : "AI summary generation failed. Please try again."
+        : "Unable to start checkout. Please try again."
     );
   } finally {
     setLoading(false);
   }
 }
 
+  async function generateSummary() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch("/api/generate-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resumeId: resumeData.id,
+          name: `${resumeData.personal.firstName} ${resumeData.personal.lastName}`,
+          experience: resumeData.experience,
+          education: resumeData.education,
+          skills: resumeData.skills,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 403 && data.code === "FEATURE_LOCKED") {
+        setError(data.error);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate summary.");
+      }
+
+      if (!data.summary) {
+        throw new Error("No summary returned.");
+      }
+
+      setResumeData((prev) => ({
+        ...prev,
+        summary: data.summary,
+      }));
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "AI summary generation failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="mt-8 space-y-5">
       <div>
-        <label className="mb-2 block font-medium">
-          Professional Summary
-        </label>
+        <label className="mb-2 block font-medium">Professional Summary</label>
 
         <textarea
           value={resumeData.summary}
@@ -104,14 +146,36 @@ async function generateSummary() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={generateSummary}
-        disabled={loading}
-        className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {loading ? "Generating..." : "✨ Generate with AI"}
-      </button>
+      {canUseAi ? (
+        <button
+          type="button"
+          onClick={generateSummary}
+          disabled={loading}
+          className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Generating..." : "✨ Generate with AI"}
+        </button>
+      ) : (
+        <div className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50 p-4">
+          <p className="text-sm font-bold text-indigo-900">
+            ✨ AI Summary is available on Professional
+          </p>
+
+          <p className="mt-1 text-sm leading-6 text-indigo-800">
+            You can still write your summary manually. Upgrade to Professional
+            to generate a polished, ATS-friendly summary with AI.
+          </p>
+
+<button
+  type="button"
+  onClick={handleUpgradeToProfessional}
+  disabled={loading}
+  className="mt-3 inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {loading ? "Starting checkout..." : "Upgrade to Professional →"}
+</button>
+        </div>
+      )}
 
       {error && (
         <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">

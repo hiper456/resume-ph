@@ -3,25 +3,41 @@
 import { useState } from "react";
 import { useResume } from "@/context/ResumeContext";
 
-export default function Review() {
+type PlanCode = "basic" | "professional" | "executive";
+
+type ReviewProps = {
+  planCode?: PlanCode;
+};
+
+const PLAN_DETAILS = {
+  basic: {
+    label: "Basic Package",
+    price: 99,
+    description: "Includes basic PDF download using the basic template.",
+  },
+  professional: {
+    label: "Professional Package",
+    price: 199,
+    description:
+      "Includes premium templates, AI summary, AI work experience improvements, and PDF download.",
+  },
+  executive: {
+    label: "Executive Package",
+    price: 399,
+    description:
+      "Includes cover letter, ATS optimization, premium tools, and PDF download.",
+  },
+} as const;
+
+export default function Review({ planCode = "basic" }: ReviewProps) {
   const { resumeData } = useResume();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
 
+  const selectedPlan = PLAN_DETAILS[planCode];
+
   const fullName =
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim();
-
-  const selectedTemplate = resumeData.templateId ?? "basic";
-
-  const planCode =
-    selectedTemplate === "modern" || selectedTemplate === "executive"
-      ? "professional"
-      : "basic";
-
-  const planLabel =
-    planCode === "professional" ? "Professional Package" : "Basic Package";
-
-  const planPrice = planCode === "professional" ? 199 : 99;
 
   async function handleUnlockDownload() {
     try {
@@ -155,15 +171,11 @@ export default function Review() {
         <p className="mt-1 text-sm">
           Selected package:{" "}
           <span className="font-bold">
-            {planLabel} — ₱{planPrice}
+            {selectedPlan.label} — ₱{selectedPlan.price}
           </span>
         </p>
 
-        <p className="mt-1 text-sm">
-          {planCode === "professional"
-            ? "Includes premium templates, AI tools, cover letter, and PDF download."
-            : "Includes basic PDF download using the basic template."}
-        </p>
+        <p className="mt-1 text-sm">{selectedPlan.description}</p>
 
         {checkoutError && (
           <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -179,7 +191,7 @@ export default function Review() {
         >
           {isCheckingOut
             ? "Creating checkout..."
-            : `🔒 Unlock & Download PDF — ₱${planPrice}`}
+            : `🔒 Unlock & Download PDF — ₱${selectedPlan.price}`}
         </button>
 
         <p className="mt-3 text-xs text-green-700">

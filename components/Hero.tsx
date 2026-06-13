@@ -65,7 +65,7 @@ const handleStart = () => {
 };
 
 const handlePrice = () => {
-  document.getElementById("Pricing")?.scrollIntoView({
+  document.getElementById("pricing")?.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
