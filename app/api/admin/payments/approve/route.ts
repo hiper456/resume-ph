@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isPlanCode } from "@/lib/plans/plans";
+import { createBuilderSession } from "@/lib/builderSessions/createBuilderSession";
+import { createAiCredits } from "@/lib/aiCredits/createAiCredits";
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +10,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const paymentId =
-      typeof body.paymentId === "string" ? body.paymentId : "";
+      typeof body.paymentId === "string" ? body.paymentId.trim() : "";
 
     const requestedPlanCode =
       typeof body.planCode === "string"
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
     const { data: payment, error: paymentError } = await supabase
       .schema("public")
       .from("payments")
-      .select("id, resume_id")
+      .select("id, resume_id, email, plan_code")
       .eq("id", paymentId)
       .single();
 
@@ -42,29 +44,24 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
-const { data: allPlans, error: allPlansError } = await supabase
-  .schema("public")
-  .from("plans")
-  .select("id, code, name, price");
 
-console.log("REQUESTED PLAN:", requestedPlanCode);
-console.log("ALL PLANS FROM API:", allPlans);
-console.log("ALL PLANS ERROR:", allPlansError);
+    const { data: plans, error: plansError } = await supabase
+      .schema("public")
+      .from("plans")
+      .select("id, code, name, price");
 
-const plan = allPlans?.find(
-  (item) => item.code === requestedPlanCode
-);
+    if (plansError) {
+      throw new Error(plansError.message);
+    }
 
-if (!plan) {
-  return NextResponse.json(
-    {
-      error: `Selected plan not found: ${requestedPlanCode}. API sees: ${JSON.stringify(
-        allPlans
-      )}`,
-    },
-    { status: 404 }
-  );
-}
+    const plan = plans?.find((item) => item.code === requestedPlanCode);
+
+    if (!plan) {
+      return NextResponse.json(
+        { error: `Selected plan not found: ${requestedPlanCode}` },
+        { status: 404 }
+      );
+    }
 
     const now = new Date().toISOString();
 
@@ -78,25 +75,70 @@ if (!plan) {
       })
       .eq("id", paymentId);
 
-    if (paymentUpdateError) throw new Error(paymentUpdateError.message);
+    if (paymentUpdateError) {
+      throw new Error(paymentUpdateError.message);
+    }
 
-    const { error: resumeUpdateError } = await supabase
-      .schema("public")
-      .from("resumes")
-      .update({
-        plan_id: plan.id,
-        payment_status: "paid",
-        approved_at: now,
-        status: "paid",
-        updated_at: now,
-      })
-      .eq("id", payment.resume_id);
+    if (payment.resume_id) {
+      const { error: resumeUpdateError } = await supabase
+        .schema("public")
+        .from("resumes")
+        .update({
+          plan_id: plan.id,
+          payment_status: "paid",
+          approved_at: now,
+          status: "paid",
+          updated_at: now,
+        })
+        .eq("id", payment.resume_id);
 
-    if (resumeUpdateError) throw new Error(resumeUpdateError.message);
+      if (resumeUpdateError) {
+        throw new Error(resumeUpdateError.message);
+      }
+    }
+
+    let builderSession:
+      | {
+          sessionId: string;
+          token: string;
+          builderUrl: string;
+        }
+      | null = null;
+
+    let aiCredits:
+      | {
+          id: string;
+          total_credits: number;
+          used_credits: number;
+        }
+      | null = null;
+
+    const shouldCreatePaidBuilderSession =
+      !payment.resume_id && requestedPlanCode !== "basic";
+
+    if (shouldCreatePaidBuilderSession) {
+      builderSession = await createBuilderSession({
+        paymentId,
+        resumeId: null,
+        email: payment.email,
+        planCode: requestedPlanCode,
+      });
+
+      aiCredits = await createAiCredits({
+        paymentId,
+        resumeId: null,
+        email: payment.email,
+        planCode: requestedPlanCode,
+      });
+    }
 
     return NextResponse.json({
       success: true,
       planCode: plan.code,
+      hasResume: Boolean(payment.resume_id),
+      builderUrl: builderSession?.builderUrl ?? null,
+      builderSessionId: builderSession?.sessionId ?? null,
+      aiCredits,
     });
   } catch (error) {
     console.error("APPROVE PAYMENT ERROR:", error);

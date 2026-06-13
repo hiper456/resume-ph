@@ -9,7 +9,7 @@ export async function createPayment({
   amount,
   planCode,
 }: {
-  resumeId: string;
+  resumeId: string | null;
   email: string;
   amount: number;
   planCode: PlanCode;

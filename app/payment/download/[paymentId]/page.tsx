@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ResumeTemplate from "@/components/resume/ResumeTemplate";
 import { getPaidResume } from "@/lib/payments/getPaidResume";
+import { getPaymentAccess } from "@/lib/payments/getPaymentAccess";
 import DownloadPdfButton from "@/components/payment/DownloadPdfButton";
 
 type DownloadPageProps = {
@@ -14,33 +15,31 @@ export default async function PaymentDownloadPage({
 }: DownloadPageProps) {
   const { paymentId } = await params;
 
+  const paymentAccess = await getPaymentAccess(paymentId);
+
+  if (!paymentAccess || paymentAccess.status !== "paid") {
+    return (
+      <PaymentStatusCard
+        icon="⏳"
+        title="Payment Pending"
+        message="Your payment is still being verified. Once approved, your access will be unlocked."
+        buttonLabel="Return Home"
+        buttonHref="/"
+      />
+    );
+  }
+
   const paidResume = await getPaidResume(paymentId);
 
   if (!paidResume) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-12">
-        <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-lg">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl">
-            ⏳
-          </div>
-
-          <h1 className="mt-5 text-3xl font-bold text-gray-900">
-            Payment Pending
-          </h1>
-
-          <p className="mt-3 text-gray-600">
-            Your payment is still being verified. Once approved, your resume PDF
-            download will be unlocked.
-          </p>
-
-          <Link
-            href="/builder"
-            className="mt-6 inline-flex rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white transition hover:bg-blue-800"
-          >
-            Return to Builder
-          </Link>
-        </div>
-      </main>
+      <PaymentStatusCard
+        icon="✅"
+        title="Payment Verified"
+        message={`Your ${paymentAccess.planCode} plan has been approved. Your secure builder access link will be available soon.`}
+        buttonLabel="Return Home"
+        buttonHref="/"
+      />
     );
   }
 
@@ -74,17 +73,17 @@ export default async function PaymentDownloadPage({
                   value={resumeData.personal.email || "No email"}
                 />
                 <InfoItem
-  label="Template"
-  value={getTemplateLabel(resumeData.templateId)}
-/>
+                  label="Template"
+                  value={getTemplateLabel(resumeData.templateId)}
+                />
                 <InfoItem label="Payment ID" value={verifiedPaymentId} />
               </div>
             </div>
 
-                  <DownloadPdfButton
-          resumeData={resumeData}
-          resumeId={paidResume.resumeId}
-        />
+            <DownloadPdfButton
+              resumeData={resumeData}
+              resumeId={paidResume.resumeId}
+            />
           </div>
         </div>
 
@@ -96,13 +95,42 @@ export default async function PaymentDownloadPage({
   );
 }
 
-function InfoItem({
-  label,
-  value,
+function PaymentStatusCard({
+  icon,
+  title,
+  message,
+  buttonLabel,
+  buttonHref,
 }: {
-  label: string;
-  value: string;
+  icon: string;
+  title: string;
+  message: string;
+  buttonLabel: string;
+  buttonHref: string;
 }) {
+  return (
+    <main className="min-h-screen bg-slate-50 px-6 py-12">
+      <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-lg">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl">
+          {icon}
+        </div>
+
+        <h1 className="mt-5 text-3xl font-bold text-gray-900">{title}</h1>
+
+        <p className="mt-3 text-gray-600">{message}</p>
+
+        <Link
+          href={buttonHref}
+          className="mt-6 inline-flex rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white transition hover:bg-blue-800"
+        >
+          {buttonLabel}
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">

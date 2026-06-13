@@ -8,22 +8,45 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const resumeData = body.resumeData as ResumeData;
+    const bodyEmail =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+
+    const resumeData = body.resumeData as ResumeData | undefined;
+
+    const resumeEmail =
+      typeof resumeData?.personal?.email === "string"
+        ? resumeData.personal.email.trim().toLowerCase()
+        : "";
+
+    const paymentEmail = bodyEmail || resumeEmail;
+
     const planCode = isPlanCode(body.planCode) ? body.planCode : "basic";
     const plan = getPlanConfig(planCode);
 
-    if (!resumeData) {
+    if (!paymentEmail) {
       return NextResponse.json(
-        { error: "Resume data is required." },
+        { error: "Email is required." },
         { status: 400 }
       );
     }
 
-    const savedResume = await saveResume(resumeData);
+    let resumeId: string | null = null;
+
+    if (resumeData) {
+      const savedResume = await saveResume({
+        ...resumeData,
+        personal: {
+          ...resumeData.personal,
+          email: paymentEmail,
+        },
+      });
+
+      resumeId = savedResume.id;
+    }
 
     const payment = await createPayment({
-      resumeId: savedResume.id,
-      email: savedResume.email,
+      resumeId,
+      email: paymentEmail,
       amount: plan.price,
       planCode: plan.code,
     });

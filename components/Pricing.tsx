@@ -1,119 +1,80 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type PlanCode = "basic" | "professional" | "executive";
 
-type PricingPackage = {
+type Package = {
   name: string;
   code: PlanCode;
   price: string;
+  amount: number;
+  description: string;
   features: string[];
-  highlighted: boolean;
+  highlighted?: boolean;
   button: string;
 };
 
-
-
-function createEmptyResumeData() {
-  const now = new Date().toISOString();
-
-  return {
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
-    status: "draft",
-    personal: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      address: "",
-      website: "",
-      linkedin: "",
-    },
-    summary: "",
-    experience: [],
-    education: [],
-    skills: [],
-    templateId: "basic",
-  };
-}
+const packages: Package[] = [
+  {
+    name: "Basic",
+    code: "basic",
+    price: "₱99",
+    amount: 99,
+    description: "Build first, pay before download.",
+    features: ["Resume builder", "Basic template", "Resume score", "PDF download after payment"],
+    button: "Start Basic",
+  },
+  {
+    name: "Professional",
+    code: "professional",
+    price: "₱199",
+    amount: 199,
+    description: "Pay first, unlock AI resume tools.",
+    features: ["Premium templates", "AI summary", "AI work experience", "Resume score"],
+    highlighted: true,
+    button: "Choose Professional",
+  },
+  {
+    name: "Executive",
+    code: "executive",
+    price: "₱399",
+    amount: 399,
+    description: "Premium career toolkit.",
+    features: ["Everything in Professional", "Cover letter", "ATS optimization", "Future job matching"],
+    button: "Choose Executive",
+  },
+];
 
 export default function Pricing() {
-  const router = useRouter();
-  const [visible, setVisible] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<PlanCode | null>(null);
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Package | null>(null);
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
+  function openCheckout(plan: Package) {
+    setError("");
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.25 }
-    );
+    if (plan.code === "basic") {
+      window.location.href = "/builder?plan=basic";
+      return;
+    }
 
-    observer.observe(section);
+    setSelectedPlan(plan);
+  }
 
-    return () => observer.disconnect();
-  }, []);
+  async function handlePaidCheckout() {
+    if (!selectedPlan) return;
 
-  const packages: PricingPackage[] = [
-    {
-      name: "Basic",
-      code: "basic",
-      price: "₱99",
-      features: [
-        "Professional resume PDF",
-        "1 clean template",
-        "No AI features",
-      ],
-      highlighted: false,
-      button: "Choose Basic",
-    },
-    {
-      name: "Professional",
-      code: "professional",
-      price: "₱199",
-      features: [
-        "Resume PDF",
-        "AI summary improvement",
-        "AI work experience improvement",
-      ],
-      highlighted: true,
-      button: "Choose Professional",
-    },
-    {
-      name: "Executive",
-      code: "executive",
-      price: "₱399",
-      features: [
-        "Resume PDF",
-        "Cover letter",
-        "ATS optimization",
-        "1 revision",
-      ],
-      highlighted: false,
-      button: "Choose Executive",
-    },
-  ];
+    setError("");
 
-  async function handleSelectPlan(planCode: PlanCode) {
-    if (planCode === "basic") {
-      router.push("/builder?plan=basic");
+    if (!email.trim() || !email.includes("@")) {
+      setError("Please enter a valid email address.");
       return;
     }
 
     try {
-      setCheckoutPlan(planCode);
+      setLoading(true);
 
       const response = await fetch("/api/payments/create-checkout", {
         method: "POST",
@@ -121,98 +82,144 @@ export default function Pricing() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          planCode,
-          resumeData: createEmptyResumeData(),
+          email: email.trim(),
+          planCode: selectedPlan.code,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Unable to start checkout.");
-      }
-
-      if (!data.checkoutUrl) {
-        throw new Error("Checkout URL was not returned.");
+        throw new Error(data.error || "Failed to create checkout.");
       }
 
       window.location.href = data.checkoutUrl;
-    } catch (error) {
-      console.error("PRICING CHECKOUT ERROR:", error);
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Unable to start checkout. Please try again."
-      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
-      setCheckoutPlan(null);
+      setLoading(false);
     }
   }
 
   return (
-    <section ref={sectionRef} id="pricing" className="bg-gray-50 py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <h2 className="text-center text-4xl font-bold">Simple Pricing</h2>
+    <section id="pricing" className="bg-slate-950 px-6 py-24 text-white">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
+            Pricing
+          </p>
 
-        <p className="mt-3 text-center text-gray-600">
-          Start with Basic or unlock AI features with a paid plan.
-        </p>
+          <h2 className="mt-4 text-3xl font-bold sm:text-4xl">
+            Choose the resume package that fits your job hunt
+          </h2>
 
-        <div className="mt-16 grid items-stretch gap-8 md:grid-cols-3">
-          {packages.map((pkg, index) => {
-            const isCheckingOut = checkoutPlan === pkg.code;
+          <p className="mt-4 text-slate-300">
+            Start simple with Basic, or unlock premium AI tools with Professional and Executive.
+          </p>
+        </div>
 
-            return (
-              <div
-                key={pkg.code}
-                style={{ transitionDelay: `${index * 150}ms` }}
-                className={`relative flex min-h-[420px] flex-col rounded-2xl p-8 shadow transition-all duration-700 ease-out ${
-                  visible
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-10 opacity-0"
-                } ${
+        <div className="mt-14 grid gap-6 md:grid-cols-3">
+          {packages.map((pkg) => (
+            <div
+              key={pkg.code}
+              className={`rounded-3xl border p-8 shadow-xl transition hover:-translate-y-1 ${
+                pkg.highlighted
+                  ? "border-cyan-400 bg-white text-slate-950"
+                  : "border-white/10 bg-white/5 text-white"
+              }`}
+            >
+              <h3 className="text-2xl font-bold">{pkg.name}</h3>
+
+              <p className={`mt-3 text-sm ${pkg.highlighted ? "text-slate-600" : "text-slate-300"}`}>
+                {pkg.description}
+              </p>
+
+              <div className="mt-6 flex items-end gap-2">
+                <span className="text-4xl font-extrabold">{pkg.price}</span>
+                <span className={pkg.highlighted ? "text-slate-500" : "text-slate-400"}>
+                  one-time
+                </span>
+              </div>
+
+              <ul className="mt-8 space-y-3 text-sm">
+                {pkg.features.map((feature) => (
+                  <li key={feature} className="flex gap-3">
+                    <span className="text-cyan-400">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={() => openCheckout(pkg)}
+                className={`mt-8 w-full rounded-2xl px-5 py-3 font-semibold transition ${
                   pkg.highlighted
-                    ? "bg-blue-700 text-white ring-4 ring-blue-200 md:-translate-y-4"
-                    : "bg-white text-gray-900"
+                    ? "bg-slate-950 text-white hover:bg-slate-800"
+                    : "bg-white text-slate-950 hover:bg-cyan-100"
                 }`}
               >
-                {pkg.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-1 text-xs font-bold text-blue-700 shadow">
-                    BEST VALUE
-                  </div>
-                )}
-
-                <h3 className="text-2xl font-bold">{pkg.name}</h3>
-
-                <p className="mt-6 text-5xl font-bold">{pkg.price}</p>
-
-                <ul className="mt-8 flex-1 space-y-3 text-sm">
-                  {pkg.features.map((feature) => (
-                    <li key={feature}>✓ {feature}</li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectPlan(pkg.code)}
-                  disabled={checkoutPlan !== null}
-                  className={`group mt-auto w-full cursor-pointer rounded-xl py-3 font-bold transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 ${
-                    pkg.highlighted
-                      ? "bg-white text-blue-700 hover:bg-blue-50 hover:shadow-xl"
-                      : "bg-blue-700 text-white hover:bg-blue-800 hover:shadow-xl"
-                  }`}
-                >
-                  {isCheckingOut ? "Starting checkout..." : pkg.button}
-                  <span className="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">
-                    →
-                  </span>
-                </button>
-              </div>
-            );
-          })}
+                {pkg.button}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
+
+      {selectedPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 text-slate-950 shadow-2xl">
+            <h3 className="text-2xl font-bold">
+              Continue with {selectedPlan.name}
+            </h3>
+
+            <p className="mt-3 text-sm text-slate-600">
+              Enter your email so we can connect your payment to your builder access.
+            </p>
+
+            <label className="mt-6 block text-sm font-semibold text-slate-700">
+              Email address
+            </label>
+
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
+            />
+
+            {error && (
+              <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </p>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPlan(null);
+                  setEmail("");
+                  setError("");
+                }}
+                className="w-1/2 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePaidCheckout}
+                disabled={loading}
+                className="w-1/2 rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Creating..." : "Continue"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

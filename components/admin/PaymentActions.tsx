@@ -53,6 +53,7 @@ export default function PaymentActions({ paymentId }: { paymentId: string }) {
       });
 
       const data = await response.json();
+      alert(data.builderUrl);
 
       if (!response.ok) {
         throw new Error(data.error || "Action failed.");
