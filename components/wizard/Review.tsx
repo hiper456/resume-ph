@@ -7,6 +7,8 @@ type PlanCode = "basic" | "professional" | "executive";
 
 type ReviewProps = {
   planCode?: PlanCode;
+  canDownloadPdf?: boolean;
+  isPaidSession?: boolean;
 };
 
 const PLAN_DETAILS = {
@@ -29,7 +31,11 @@ const PLAN_DETAILS = {
   },
 } as const;
 
-export default function Review({ planCode = "basic" }: ReviewProps) {
+export default function Review({
+  planCode = "basic",
+  canDownloadPdf = false,
+  isPaidSession = false,
+}: ReviewProps) {
   const { resumeData } = useResume();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
@@ -38,6 +44,8 @@ export default function Review({ planCode = "basic" }: ReviewProps) {
 
   const fullName =
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim();
+
+  const shouldShowDownload = canDownloadPdf || isPaidSession;
 
   async function handleUnlockDownload() {
     try {
@@ -88,13 +96,17 @@ export default function Review({ planCode = "basic" }: ReviewProps) {
     }
   }
 
+  function handleDownloadPdf() {
+    window.print();
+  }
+
   return (
     <div className="mt-8 space-y-6">
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 text-blue-900">
         <h3 className="text-lg font-bold">🎉 Your resume is ready!</h3>
 
         <p className="mt-1 text-sm">
-          Review your information before unlocking your professional PDF.
+          Review your information before downloading your professional PDF.
         </p>
       </div>
 
@@ -170,12 +182,17 @@ export default function Review({ planCode = "basic" }: ReviewProps) {
 
         <p className="mt-1 text-sm">
           Selected package:{" "}
-          <span className="font-bold">
-            {selectedPlan.label} — ₱{selectedPlan.price}
-          </span>
+          <span className="font-bold">{selectedPlan.label}</span>
+          {!shouldShowDownload && (
+            <span className="font-bold"> — ₱{selectedPlan.price}</span>
+          )}
         </p>
 
-        <p className="mt-1 text-sm">{selectedPlan.description}</p>
+        <p className="mt-1 text-sm">
+          {shouldShowDownload
+            ? "Your payment has been verified. You can now download your PDF."
+            : selectedPlan.description}
+        </p>
 
         {checkoutError && (
           <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -183,20 +200,32 @@ export default function Review({ planCode = "basic" }: ReviewProps) {
           </p>
         )}
 
-        <button
-          type="button"
-          onClick={handleUnlockDownload}
-          disabled={isCheckingOut}
-          className="mt-4 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-        >
-          {isCheckingOut
-            ? "Creating checkout..."
-            : `🔒 Unlock & Download PDF — ₱${selectedPlan.price}`}
-        </button>
+        {shouldShowDownload ? (
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            className="mt-4 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+          >
+            ⬇ Download PDF
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleUnlockDownload}
+            disabled={isCheckingOut}
+            className="mt-4 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+          >
+            {isCheckingOut
+              ? "Creating checkout..."
+              : `🔒 Unlock & Download PDF — ₱${selectedPlan.price}`}
+          </button>
+        )}
 
-        <p className="mt-3 text-xs text-green-700">
-          Pay securely via GCash, Maya, or card.
-        </p>
+        {!shouldShowDownload && (
+          <p className="mt-3 text-xs text-green-700">
+            Pay securely via GCash, Maya, or card.
+          </p>
+        )}
       </div>
     </div>
   );

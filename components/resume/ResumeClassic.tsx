@@ -50,10 +50,10 @@ export default function ResumeTemplate({
   }
 
   return (
-    <div
-      id="resume-preview-paper"
-      className="mx-auto w-full max-w-[540px] rounded-lg border border-gray-200 bg-white p-10 text-gray-900 shadow-2xl print:m-0 print:w-full print:max-w-none print:rounded-none print:border-0 print:px-10 print:py-8 print:shadow-none"
-    >
+<div
+  id="resume-preview-paper"
+  className="mx-auto min-h-[760px] w-full max-w-[540px] rounded-lg border border-gray-200 bg-white p-10 text-gray-900 shadow-2xl print:m-0 print:h-[297mm] print:min-h-[297mm] print:w-[210mm] print:max-w-none print:rounded-none print:border-0 print:px-10 print:py-8 print:shadow-none"
+>
       <header className="text-center">
         <h1 className="text-3xl font-extrabold uppercase tracking-tight text-gray-950">
           {fullName || "Juan Dela Cruz"}

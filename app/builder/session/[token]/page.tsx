@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BuilderShell, { type PlanCode } from "@/components/builder/BuilderShell";
 import { getBuilderSession } from "@/lib/builderSessions/getBuilderSession";
 
 type BuilderSessionPageProps = {
@@ -6,6 +7,14 @@ type BuilderSessionPageProps = {
     token: string;
   }>;
 };
+
+function getValidPlanCode(planCode: string): PlanCode {
+  if (planCode === "professional" || planCode === "executive") {
+    return planCode;
+  }
+
+  return "basic";
+}
 
 export default async function BuilderSessionPage({
   params,
@@ -41,56 +50,23 @@ export default async function BuilderSessionPage({
     );
   }
 
-  return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12">
-      <div className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-xl">
-        <div className="inline-flex rounded-full bg-green-50 px-4 py-2 text-sm font-bold text-green-700 ring-1 ring-green-200">
-          ✅ Builder Access Verified
-        </div>
-
-        <h1 className="mt-6 text-4xl font-black text-slate-950">
-          {formatPlanName(session.planCode)} Builder
-        </h1>
-
-        <p className="mt-3 text-slate-600">
-          Your paid builder session is active. This secure link is connected to:
-        </p>
-
-        <div className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-5 text-sm">
-          <InfoItem label="Email" value={session.email} />
-          <InfoItem label="Plan" value={formatPlanName(session.planCode)} />
-          <InfoItem label="Payment ID" value={session.paymentId} />
-          <InfoItem
-            label="Access Expires"
-            value={new Date(session.expiresAt).toLocaleString()}
-          />
-        </div>
-
-        <Link
-          href={`/builder?session=${token}`}
-          className="mt-8 inline-flex rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white transition hover:bg-blue-800"
-        >
-          Open Builder
-        </Link>
-      </div>
-    </main>
-  );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 break-all font-semibold text-slate-950">{value}</p>
-    </div>
-  );
-}
-
-function formatPlanName(planCode: string) {
-  if (planCode === "professional") return "Professional";
-  if (planCode === "executive") return "Executive";
-  if (planCode === "basic") return "Basic";
-  return planCode;
+return (
+<BuilderShell
+  planCode={getValidPlanCode(session.planCode)}
+  email={session.email}
+  paymentId={session.paymentId}
+  sessionId={session.id}
+  sessionToken={token}
+  aiCreditsRemaining={5}
+  isPaidSession
+  permissions={{
+    aiSummary: session.planCode === "professional" || session.planCode === "executive",
+    aiExperience: session.planCode === "professional" || session.planCode === "executive",
+    templates: session.planCode === "professional" || session.planCode === "executive",
+    coverLetter: session.planCode === "executive",
+    atsScore: true,
+    pdfDownload: true,
+  }}
+/>
+);
 }

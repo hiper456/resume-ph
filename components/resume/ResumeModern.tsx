@@ -48,12 +48,13 @@ export default function ResumeModern({ resumeData }: Props) {
     return "";
   }
 
-  return (
-    <div
-      id="resume-preview-paper"
-      className="mx-auto w-full max-w-[540px] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-2xl print:m-0 print:w-full print:max-w-none print:rounded-none print:border-0 print:shadow-none"
-    >
-      <div className="grid min-h-[760px] grid-cols-[34%_66%] print:min-h-0">
+
+return (
+  <div
+    id="resume-preview-paper"
+    className="mx-auto w-full max-w-[540px] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-2xl print:m-0 print:h-[297mm] print:w-[210mm] print:max-w-none print:rounded-none print:border-0 print:shadow-none"
+  >
+    <div className="grid min-h-[760px] grid-cols-[34%_66%] print:min-h-[297mm]">
         <aside className="bg-slate-900 p-6 text-white print:bg-slate-900">
           <div className="mb-8">
             <div className="mb-4 h-16 w-16 rounded-full bg-white/10" />

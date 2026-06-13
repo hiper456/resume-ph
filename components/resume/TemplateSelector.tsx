@@ -6,7 +6,13 @@ import {
 } from "@/lib/templates/templates";
 import { useResume } from "@/context/ResumeContext";
 
-export default function TemplateSelector() {
+type TemplateSelectorProps = {
+  canUsePremiumTemplates?: boolean;
+};
+
+export default function TemplateSelector({
+  canUsePremiumTemplates = false,
+}: TemplateSelectorProps) {
   const { resumeData, setResumeData } = useResume();
 
   function handleSelectTemplate(templateId: ResumeTemplateId) {
@@ -29,21 +35,29 @@ export default function TemplateSelector() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {RESUME_TEMPLATES.map((template) => {
-          const isSelected =
-            (resumeData.templateId ?? "basic") === template.id;
+          const isSelected = (resumeData.templateId ?? "basic") === template.id;
+          const isLocked = template.isPremium && !canUsePremiumTemplates;
 
           return (
             <button
               key={template.id}
               type="button"
-              onClick={() => handleSelectTemplate(template.id)}
-              className={`relative overflow-hidden rounded-xl border bg-white text-left transition hover:border-blue-500 hover:shadow-md ${
+              onClick={() => {
+                if (isLocked) return;
+                handleSelectTemplate(template.id);
+              }}
+              disabled={isLocked}
+              className={`relative overflow-hidden rounded-xl border bg-white text-left transition ${
+                isLocked
+                  ? "cursor-not-allowed opacity-70"
+                  : "hover:border-blue-500 hover:shadow-md"
+              } ${
                 isSelected
                   ? "border-blue-600 ring-2 ring-blue-100"
                   : "border-slate-200"
               }`}
             >
-              {template.isPremium && (
+              {isLocked && (
                 <div className="absolute right-2 top-2 z-10 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-700">
                   🔒 Premium
                 </div>
@@ -58,6 +72,12 @@ export default function TemplateSelector() {
                 <p className="mt-1 text-xs text-slate-500">
                   {template.description}
                 </p>
+
+                {isLocked && (
+                  <p className="mt-2 text-xs font-bold text-blue-700">
+                    Upgrade to Professional
+                  </p>
+                )}
               </div>
             </button>
           );
@@ -67,11 +87,7 @@ export default function TemplateSelector() {
   );
 }
 
-function TemplateThumbnail({
-  templateId,
-}: {
-  templateId: ResumeTemplateId;
-}) {
+function TemplateThumbnail({ templateId }: { templateId: ResumeTemplateId }) {
   if (templateId === "modern") {
     return (
       <div className="grid h-32 grid-cols-[34%_66%] bg-white">

@@ -49,10 +49,12 @@ export default function ResumeExecutive({ resumeData }: Props) {
   }
 
   return (
-    <div
-      id="resume-preview-paper"
-      className="mx-auto w-full max-w-[540px] rounded-lg border border-stone-200 bg-[#fbfaf7] p-10 text-stone-900 shadow-2xl print:m-0 print:w-full print:max-w-none print:rounded-none print:border-0 print:bg-white print:px-10 print:py-8 print:shadow-none"
-    >
+ <div
+  id="resume-preview-paper"
+  className="mx-auto min-h-[760px] w-full max-w-[540px] rounded-lg 
+  border border-stone-200 bg-[#fbfaf7] p-10 text-stone-900 shadow-2xl print:m-0 print:h-[297mm] print:min-h-[297mm] print:w-[210mm] 
+  print:max-w-none print:rounded-none print:border-0 print:bg-white print:px-10 print:py-8 print:shadow-none"
+>
       <header className="border-b border-stone-300 pb-6">
         <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.35em] text-stone-500">
           Executive Curriculum Vitae

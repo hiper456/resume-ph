@@ -49,47 +49,49 @@ export default async function PaymentDownloadPage({
     `${resumeData.personal.firstName} ${resumeData.personal.lastName}`.trim();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100 sm:p-8 print:hidden">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <div className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-700 ring-1 ring-green-200">
-                ✅ Payment Verified
-              </div>
+    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8 print:bg-white print:p-0">
+      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[320px_minmax(0,1fr)] print:block">
+        <aside className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100 lg:sticky lg:top-6 lg:self-start print:hidden">
+          <div className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-700 ring-1 ring-green-200">
+            ✅ Payment Verified
+          </div>
 
-              <h1 className="mt-4 text-3xl font-black text-gray-950 sm:text-4xl">
-                Your resume is ready
-              </h1>
+          <h1 className="mt-4 text-3xl font-black leading-tight text-gray-950">
+            Your resume is ready
+          </h1>
 
-              <p className="mt-2 text-gray-600">
-                You can preview your resume below and download it as a PDF.
-              </p>
+          <p className="mt-2 text-sm leading-6 text-gray-600">
+            Preview your resume on the right and download the PDF when ready.
+          </p>
 
-              <div className="mt-5 grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
-                <InfoItem label="Resume For" value={fullName || "Customer"} />
-                <InfoItem
-                  label="Email"
-                  value={resumeData.personal.email || "No email"}
-                />
-                <InfoItem
-                  label="Template"
-                  value={getTemplateLabel(resumeData.templateId)}
-                />
-                <InfoItem label="Payment ID" value={verifiedPaymentId} />
-              </div>
-            </div>
+          <div className="mt-6 space-y-3 text-sm text-gray-700">
+            <InfoItem label="Resume For" value={fullName || "Customer"} />
+            <InfoItem
+              label="Email"
+              value={resumeData.personal.email || "No email"}
+            />
+            <InfoItem
+              label="Template"
+              value={getTemplateLabel(resumeData.templateId)}
+            />
+            <InfoItem label="Payment ID" value={verifiedPaymentId} />
+          </div>
 
+          <div className="mt-6">
             <DownloadPdfButton
               resumeData={resumeData}
               resumeId={paidResume.resumeId}
             />
           </div>
-        </div>
 
-        <div className="mt-8 flex justify-center print:block">
+          <p className="mt-4 text-xs leading-5 text-gray-500">
+            Tip: choose “Save as PDF” if your browser opens the print dialog.
+          </p>
+        </aside>
+
+        <section className="flex justify-center overflow-x-auto rounded-3xl bg-white p-4 shadow-xl ring-1 ring-gray-100 sm:p-6 lg:p-8 print:block print:overflow-visible print:rounded-none print:p-0 print:shadow-none print:ring-0">
           <ResumeTemplate resumeData={resumeData} />
-        </div>
+        </section>
       </div>
     </main>
   );

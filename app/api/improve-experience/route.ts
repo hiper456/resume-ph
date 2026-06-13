@@ -1,21 +1,43 @@
 import { NextResponse } from "next/server";
 import { FEATURES, PermissionService } from "@/lib/permissions";
+import { getBuilderSession } from "@/lib/builderSessions/getBuilderSession";
+
+function canUseAiExperienceFromPlan(planCode: string) {
+  return planCode === "professional" || planCode === "executive";
+}
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.resumeId) {
-      return NextResponse.json(
-        { error: "Resume ID is required." },
-        { status: 400 }
-      );
-    }
+    const resumeId = body.resumeId as string | undefined;
+    const sessionToken = body.sessionToken as string | undefined;
 
-    await PermissionService.requireFeature({
-      resumeId: body.resumeId,
-      feature: FEATURES.AI_EXPERIENCE,
-    });
+    if (sessionToken) {
+      const session = await getBuilderSession(sessionToken);
+
+      if (!session || !canUseAiExperienceFromPlan(session.planCode)) {
+        return NextResponse.json(
+          {
+            error: "Upgrade to Professional to use AI Experience Improvement.",
+            code: "FEATURE_LOCKED",
+          },
+          { status: 403 }
+        );
+      }
+    } else {
+      if (!resumeId) {
+        return NextResponse.json(
+          { error: "Resume ID or session token is required." },
+          { status: 400 }
+        );
+      }
+
+      await PermissionService.requireFeature({
+        resumeId,
+        feature: FEATURES.AI_EXPERIENCE,
+      });
+    }
 
     const prompt = `
 You are an expert ATS resume writer.
@@ -75,10 +97,7 @@ Requirements:
   } catch (error) {
     console.error("IMPROVE EXPERIENCE ERROR:", error);
 
-    if (
-      error instanceof Error &&
-      error.message.includes("locked")
-    ) {
+    if (error instanceof Error && error.message.includes("locked")) {
       return NextResponse.json(
         {
           error: "Upgrade to Professional to use AI Experience Improvement.",

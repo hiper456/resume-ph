@@ -7,6 +7,7 @@ import { sortExperienceNewestFirst } from "@/utils/sortResumeEntries";
 
 type WorkExperienceProps = {
   canUseAi?: boolean;
+  sessionToken?: string;
 };
 
 const months = [
@@ -60,6 +61,7 @@ function normalizeExperience(item: WorkExperience): WorkExperience {
 
 export default function WorkExperience({
   canUseAi = false,
+  sessionToken,
 }: WorkExperienceProps) {
   const { resumeData, setResumeData } = useResume();
 
@@ -102,6 +104,7 @@ export default function WorkExperience({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          sessionToken,
           resumeId: resumeData.id,
           position: draft.position,
           company: draft.company,
